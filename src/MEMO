@@ -1,0 +1,16 @@
+Subsystem detectors and readout
+
+HKS:
+- Drift Chambers; TDC
+- TOF: ADC, TDC
+- Cherenkov (aerogel): ADC, TDC
+- Cherenkov (water): ADC, TDC
+
+HES:
+- Drift Chambers; TDC
+- TOF: ADC, TDC
+
+FEE:
+FADC250
+VTP
+VETROC

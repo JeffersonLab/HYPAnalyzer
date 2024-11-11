@@ -1,0 +1,18 @@
+*~
+
+*.swp
+*.o
+*.so
+*.d
+*.os
+*.pcm
+build*/
+bin*/
+lib64*/
+
+CMakeFiles/
+CMakeCache.txt
+
+
+# macOS
+.DS_Store
