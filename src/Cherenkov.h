@@ -5,9 +5,8 @@
 
 #include "TClonesArray.h"
 #include "THaNonTrackingDetector.h"
-#include "THcHitList.h"
 
-class Cherenkov : public THaNonTrackingDetector, public THcHitList {
+class Cherenkov : public THaNonTrackingDetector {
  public:
   Cherenkov(const char* name, const char* description="",
 	    THaApparatus* apparatus = NULL);

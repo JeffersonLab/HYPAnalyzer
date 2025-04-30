@@ -1,4 +1,10 @@
 #include "HKSSpectrometer.h"
+#include "THaTrack.h"
+
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 
 ClassImp(HKSSpectrometer)
 
@@ -18,8 +24,30 @@ HKSSpectrometer::~HKSSpectrometer()
 }
 
 //_____________________________________________________________________________
+THaAnalysisObject::EStatus HKSSpectrometer::Init( const TDatime& date )
+{
+
+  THaDetector* detdc = GetDetector("DC");
+  if( dynamic_cast<DC*>(detdc) ) {
+    fDC = static_cast<DC*>(detdc);
+  } else {
+    Error("HKSSpectrometer", "Cannot find detector DC");
+    fDC = nullptr;
+  }
+  }
+
+  return THaSpectrometer::Init(date)
+}
+
+//_____________________________________________________________________________
 Int_t HKSSpectrometer::ReadDatabase( const TDatime& date )
 {
+
+  // Load parameters 
+
+  #ifdef WITH_DEBUG
+    cout << "HKSSpectrometer::ReadDatabase()" << endl;
+  #endif
 
   return kOK;
   
@@ -36,6 +64,19 @@ Int_t HKSSpectrometer::ReadRunDatabase( const TDatime& date )
 //_____________________________________________________________________________
 Int_t HKSSpectrometer::DefineVariables( EMode mode )
 {
+
+  if( mode == kDefine && fIsSetup ) return kOK;
+  THaSpectrometer::DefineVariables( mode );
+  fIsSetup = ( mode == kDefine );
+  // Add variables here
+  /*
+  RVarDef vars[] = {
+    {},
+    { 0 }    
+  };
+  
+  return DefineVarsFromList(vars, mode);
+    */
 
   return kOK;
 
