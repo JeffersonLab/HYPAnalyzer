@@ -5,9 +5,8 @@
 
 #include "TClonesArray.h"
 #include "THaTrackingDetector.h"
-#include "THcHitList.h"
 
-class DC : public THaTrackingDetector, public THcHitList {
+class DC : public THaTrackingDetector {
  public:
   DC(const char* name, const char* description="",
      THaApparatus* apparatus = NULL);
@@ -16,7 +15,6 @@ class DC : public THaTrackingDetector, public THcHitList {
   virtual void    Clear( Option_t* opt="" );
   virtual Int_t   Decode( const THaEvData& );
   virtual EStatus Init( const TDatime& run_time );
-  virtual Int_t   End( THaRunBase *r = 0 );
   virtual Int_t   CoarseTrack( TClonesArray& tracks );
   virtual Int_t   FineTrack( TClonesArray& tracks );
   

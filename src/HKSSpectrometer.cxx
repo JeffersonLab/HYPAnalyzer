@@ -34,9 +34,8 @@ THaAnalysisObject::EStatus HKSSpectrometer::Init( const TDatime& date )
     Error("HKSSpectrometer", "Cannot find detector DC");
     fDC = nullptr;
   }
-  }
-
-  return THaSpectrometer::Init(date)
+  
+  return THaSpectrometer::Init(date);
 }
 
 //_____________________________________________________________________________

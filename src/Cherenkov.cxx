@@ -97,10 +97,5 @@ Int_t Cherenkov::FineProcess( TClonesArray& tracks )
 }
 
 //________________________________________________________________
-Int_t Cherenkov::End(THaRunBase* run)
-{
-  MissReport(Form("%s.%s", GetApparatus()->GetName(), GetName()));
-  return 0;
-}
 
 ClassImp(Cherenkov)

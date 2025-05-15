@@ -2,7 +2,11 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-project(HKSlib LANGUAGES CXX)
+project(HYPlib LANGUAGES CXX)
+
+# Podd
+#find_package(Podd 1.7 REQUIRED)
+#include(PoddCMakeEnv)
 
 if(NOT TARGET hcana:HallC)
   if(DEFINED EVN{HCANA})

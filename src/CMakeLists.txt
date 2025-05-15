@@ -1,4 +1,4 @@
-# CMakeLists.txt for HKSlib sources
+# CMakeLists.txt for HYPlib sources
 
 cmake_minimum_required(VERSION 3.5)
 
@@ -6,14 +6,16 @@ cmake_minimum_required(VERSION 3.5)
 # Names of source files and target libraries
 
 # The generated shared library will be named lib$(PACKAGE).so/dylib
-set(PACKAGE HKS)
+set(PACKAGE HYP)
 
 # Sources
 set(src
   HKSSpectrometer.cxx
   DC.cxx
   Cherenkov.cxx
-  TOF.cxx
+  HYPScintillatorPlane.cxx
+  HYPScintDetector.cxx
+  HYPScintHit.cxx  
   )
 
 # Headers

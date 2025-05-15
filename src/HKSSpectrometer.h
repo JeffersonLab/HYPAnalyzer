@@ -2,6 +2,7 @@
 #define HKSSpectrometer_h
 
 #include "THaSpectrometer.h"
+#include "DC.h"
 
 class HKSSpectrometer : public THaSpectrometer {
  public:  
@@ -15,6 +16,8 @@ class HKSSpectrometer : public THaSpectrometer {
   
  protected:
 
+  DC* fDC;
+  
   virtual Int_t ReadDatabase( const TDatime& date );
   virtual Int_t ReadRunDatabase( const TDatime& date );
   virtual Int_t DefineVariables( EMode mode = kDefine );

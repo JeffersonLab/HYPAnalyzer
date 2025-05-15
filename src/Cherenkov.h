@@ -15,7 +15,6 @@ class Cherenkov : public THaNonTrackingDetector {
   virtual void    Clear( Option_t* opt="" );
   virtual Int_t   Decode( const THaEvData& );
   virtual EStatus Init( const TDatime& date );
-  virtual Int_t   End( THaRunBase *r = 0 );
   virtual Int_t   CoarseProcess( TClonesArray& tracks );
   virtual Int_t   FineProcess( TClonesArray& tracks );
   

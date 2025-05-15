@@ -85,7 +85,7 @@ namespace Decoder {
 	if (fDebugFile)
 	  *fDebugFile << "VETROCModule:: Block HEADER >> data = " 
 		      << hex << *p << " >> event number = " << dec 
-		      <<  << " >> slot number = "  
+		      << " >> slot number = "  
 		      << tdc_data.glb_hdr_slno << endl;
 #endif
       }

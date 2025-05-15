@@ -97,12 +97,5 @@ Int_t DC::FineTrack( TClonesArray& tracks )
 }
 
 //________________________________________________________________
-Int_t DC::End(THaRunBase* run)
-{
-  MissReport(Form("%s.%s", GetApparatus()->GetName(), GetName()));
-  return 0;
-}
-
-//________________________________________________________________
 
 ClassImp(DC)
