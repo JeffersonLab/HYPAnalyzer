@@ -13,9 +13,9 @@ set(src
   HKSSpectrometer.cxx
   DC.cxx
   Cherenkov.cxx
-  HYPScintillatorPlane.cxx
-  HYPScintDetector.cxx
-  HYPScintHit.cxx  
+  HYPTOFPlane.cxx
+  HYPTOFDetector.cxx
+  HYPData.cxx
   )
 
 # Headers
@@ -30,10 +30,8 @@ string(REPLACE .cxx .h headers "${src}")
 set(allheaders ${headers})
 #set(allheaders ${headers} StandaloneHeader1.h StandaloneHeader2.h)
 
-#------------------------------------------------------------------------------
-# Do not change anything below here unless you know what you are doing
-
 #----------------------------------------------------------------------------
+
 # Library
 add_library(${PACKAGE} SHARED ${src} ${allheaders} ${PACKAGE}Dict.cxx)
 
@@ -44,7 +42,7 @@ target_include_directories(${PACKAGE}
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   )
-target_link_libraries(${PACKAGE} PUBLIC hcana::HallC)
+target_link_libraries(${PACKAGE} PUBLIC Podd::HallA)
 
 include(GNUInstallDirs)
 

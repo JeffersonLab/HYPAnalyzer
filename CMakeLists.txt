@@ -5,17 +5,13 @@ cmake_minimum_required(VERSION 3.5)
 project(HYPlib LANGUAGES CXX)
 
 # Podd
-#find_package(Podd 1.7 REQUIRED)
-#include(PoddCMakeEnv)
-
-if(NOT TARGET hcana:HallC)
-  if(DEFINED EVN{HCANA})
-    set(CMAKE_PREFIX_PATH "$ENV{HCANA}" "${CMAKE_PREFIX_PATH}")
+if(NOT TARGET Podd::HallA)
+  if(DEFINED ENV{ANALYZER})
+    set(CMAKE_PREFIX_PATH "$ENV{ANALYZER}" "${CMAKE_PREFIX_PATH}")
   endif()
 
-  find_package(hcana 0.95 REQUIRED)
+  find_package(Podd 1.7 REQUIRED)
 endif()
-
 include(PoddCMakeEnv)
 
 set_diagnostic_flags(WALL WEXTRA)
