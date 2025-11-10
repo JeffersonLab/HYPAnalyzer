@@ -7,6 +7,13 @@ using namespace std;
 namespace HYPData {
 
   //_______________________________________________________________
+  Int_t FADCData::Decode( const THaEvData& evdata, THaDetMap::Module *d)
+  {
+
+    return 0;
+  }
+
+  //_______________________________________________________________
   Int_t FADCData::AddHit( const DigitizerHitInfo_t& hitinfo )
   {
     // Modes for multi-function module
@@ -30,15 +37,16 @@ namespace HYPData {
       UInt_t pulseped  = fadc->GetPulsePedestalData(hitinfo.chan, i);
       UInt_t coarsetime = fadc->GetPulseCoarseTimeData(hitinfo.chan, i);
       UInt_t finetime = fadc->GetPulseFineTimeData(hitinfo.chan, i);
-    /*
-      cout << "Integral: " << pulseint << endl;
-      cout << "PulseAmp: " << pulsepeak << endl;
-      cout << "PulseTime: " << pulsetime << endl;
-      cout << "Pedestal: " << pulseped << endl;
-      cout << "CoarseTime:" << coarsetime << endl;
-      cout << "FineTime:" << finetime << endl;
-    */
-      fPulseData.push_back(FADCHit{chan, pulseint, pulsepeak, pulsetime, pulseped, coarsetime, finetime});
+
+      /*
+        cout << "Integral: " << pulseint << endl;
+        cout << "PulseAmp: " << pulsepeak << endl;
+        cout << "PulseTime: " << pulsetime << endl;
+        cout << "Pedestal: " << pulseped << endl;
+        cout << "CoarseTime:" << coarsetime << endl;
+        cout << "FineTime:" << finetime << endl;
+      */
+        fPulseData.push_back(FADCHit{chan, pulseint, pulsepeak, pulsetime, pulseped, coarsetime, finetime});
     }
 
     fNHits++;
@@ -52,11 +60,4 @@ namespace HYPData {
     fPulseData.clear();
     fNHits = 0;
   }
-
-  //_______________________________________________________________
-  Int_t TDCData::AddHit( const DigitizerHitInfo_t& hitinfo, UInt_t data )
-  {
-    return 0;
-  }
-
-};
+}

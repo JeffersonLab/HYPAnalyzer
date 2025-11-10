@@ -11,12 +11,14 @@ set(PACKAGE HYP)
 # Sources
 set(src
   HKSSpectrometer.cxx
-  DC.cxx
+  HYPDC.cxx
+  HYPDCPlane.cxx
   Cherenkov.cxx
   HYPTOFPlane.cxx
   HYPTOFDetector.cxx
   HYPData.cxx
-  )
+  vfTDC.cxx
+)
 
 # Headers
 string(REPLACE .cxx .h headers "${src}")
@@ -42,7 +44,10 @@ target_include_directories(${PACKAGE}
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   )
-target_link_libraries(${PACKAGE} PUBLIC Podd::HallA)
+#target_link_libraries(${PACKAGE} PUBLIC Podd::HallA)
+#target_link_libraries(${PACKAGE} PUBLIC ${ROOT_LIBRARIES})
+
+target_link_libraries(${PACKAGE} PUBLIC Podd::Decode Podd::HallA)
 
 include(GNUInstallDirs)
 

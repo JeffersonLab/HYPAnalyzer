@@ -1,5 +1,5 @@
-#ifndef HYPDATA_H
-#define HYPDATA_H
+#ifndef HYPDATA_h
+#define HYPDATA_h
 
 #include "THaDetMap.h"
 #include "DataType.h"
@@ -20,9 +20,13 @@ namespace HYPData {
   };
 
   struct TDCHit {
-    Data_t fTimeLE;
-    Data_t fTimeTE;
-    Data_t fTime;
+    UInt_t fChan; // channel number
+    UInt_t fTime; // Raw TDC data
+    UInt_t fOpt;  // TDC mode  0: LE 1: TE
+
+    TDCHit() : fChan(kBig), fTime(kBig), fOpt(kBig) {}
+    TDCHit(UInt_t chan, UInt_t tdc, UInt_t tdc_opt)
+      : fChan(chan), fTime(tdc), fOpt(tdc_opt) {}
   };
 
   // FADC config parameters
@@ -39,37 +43,38 @@ namespace HYPData {
     virtual ~FADCData() {}
 
     Int_t      AddHit( const DigitizerHitInfo_t& hitinfo );
-    Int_t      GetNHits() { return fNHits; }
-    size_t     GetSize() const { return fPulseData.size(); }
+    Int_t      Decode( const THaEvData& evdata, THaDetMap::Module *d );
+    Int_t      GetNHits()          { return fNHits; }
+    size_t     GetSize()     const { return fPulseData.size(); }
     FADCHit&   GetData( size_t i ) { return fPulseData[i]; }
     std::vector<uint32_t>& GetSampleData() { return fSampleData; }
+    std::vector<FADCHit>&  GetPulseData() { return fPulseData; }
     void       Clear();
-    std::vector<FADCHit>& GetPulseData() { return fPulseData; }
 
   protected:  
-
-    std::vector<FADCHit> fPulseData;
-    std::vector<uint32_t> fSampleData;
-  
     Int_t fNHits;
-  };
 
+    std::vector<FADCHit>  fPulseData;
+    std::vector<uint32_t> fSampleData;  
+  };
   // TDC module data
   // class TDCData : Podd::TDCData {
+  /*
   class TDCData {
   public:
     TDCData() {}
     virtual ~TDCData() {}  
 
-    Int_t      AddHit( const DigitizerHitInfo_t& hitinfo, UInt_t data );
-    TDCHit& GetData( size_t i ) { return fTDC[i]; }
-
+    Int_t      AddHit( const DigitizerHitInfo_t& hitinfo );
+    TDCHit&    GetData( size_t i ) { return fTDCData[i]; }
+    size_t     GetSize() const { return fTDCData.size(); }
+    void       Clear();
+    
   protected:
-
-    std::vector<TDCHit> fTDC;
     Int_t fNHits;
+    std::vector<TDCHit> fTDCData;
   };
-
-} // namespace HYPData
+  */
+}
 
 #endif
