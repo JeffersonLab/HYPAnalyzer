@@ -153,7 +153,7 @@ Int_t HYPDCPlane::Decode( const THaEvData& evdata )
 {
   const char* const here = "Decode";
 
-  UInt_t evnum = evdata.GetEvNum();
+  //  UInt_t evnum = evdata.GetEvNum();
   //  cout << "Event Number: " << evnum << endl;
 
   // Assume we only have TDC module
