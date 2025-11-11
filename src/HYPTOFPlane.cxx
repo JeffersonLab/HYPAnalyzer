@@ -2,6 +2,7 @@
 #include "THaDetMap.h"
 #include "THaEvData.h"
 #include "VarType.h"
+#include "vfTDC.h"
 #include <cstdlib>
 
 using namespace std;
@@ -65,7 +66,8 @@ Int_t HYPTOFPlane::ReadDatabase( const TDatime& date )
   if( err )
     return err;
 
-  if( FillDetMap(detmap, THaDetMap::kFillLogicalChannel, here) <= 0 )
+//  if( FillDetMap(detmap, THaDetMap::kFillLogicalChannel, here) <= 0 )
+  if( FillDetMap(detmap, THaDetMap::kFillModel | THaDetMap::kFillRefChan, here) <= 0 )
     return kInitError;
 
   if( ! err ) {
@@ -78,21 +80,22 @@ Int_t HYPTOFPlane::ReadDatabase( const TDatime& date )
     }
   }
 
-  /*
-  For vfTDC/VETROC modules
-  for(UInt_t i = 0; i < (UInt_t)fDetMap->GetSize(); i++ ){
-    THaDetMap::Module* d = fDetMap->GetModule(i);
-    if( !d->GetModel() == 250 )
-      d->MakeTDC();
-  }
-  */
-
   // Check parent detector initialization
   if ( fTOF ) {
     assert(fTOF->Status() == kOK);
   }
 
-  // Init FADCData obj
+//  Decoder::THaCrateMap* cratemap = 
+  cout << "HYPTOFPlane::ReadDatabase " << fDetMap->GetSize() << endl;  
+  // For vfTDC modules
+  for(UInt_t i = 0; i < (UInt_t)fDetMap->GetSize(); i++ ){
+    THaDetMap::Module* d = fDetMap->GetModule(i);
+    cout << "Module: " << d->crate << " " << d->slot << " " << d->GetModel() << endl;
+    if( d->GetModel() == 527 )
+      d->MakeTDC();
+  }
+
+  // Init FADCData
   fFADCData = new FADCData();
 
   return kOK;
@@ -139,9 +142,14 @@ Int_t HYPTOFPlane::ReadGeometry(FILE* file, const TDatime& date, Bool_t required
 //__________________________________________________________________
 Int_t HYPTOFPlane::DefineVariables( EMode mode )
 {
-
+  // Raw FADC hits
   RVarDef vars[] = {
-    {"nhit", "Number of Hits", "GetNHits()"},
+    {"AdcPulseIntRaw",  "Raw ADC pulse integral", "fFADCData->GetPulseData().fPulseIntegral"},
+    {"AdcPulsePeakRaw", "Raw ADC pulse peak",     "fFADCData->GetPulseData().fPulseIntegral"},
+    {"AdcPulseTimeRaw", "Raw ADC pulse time",     "fFADCData->GetPulseData().fPulseIntegral"},
+    {"AdcPedestalRaw",  "Raw ADC pedestal",       "fFADCData->GetPulseData().fPulseIntegral"},
+    {"CoarseTimeRaw",   "Raw Coarse time",        "fFADCData->GetPulseData().fPulseIntegral"},
+    {"FineTimeRaw",     "Raw Fine time",          "fFADCData->GetPulseData().fPulseIntegral"},
     {0}
   };
 
@@ -166,7 +174,6 @@ OptUInt_t HYPTOFPlane::LoadData( const THaEvData& evdata,
    }
 
   // Generic THaDetBase::LoadData call
-  // cout << "Use Generic GetData" << endl;
   return evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
 
 }
@@ -181,30 +188,55 @@ Int_t HYPTOFPlane::Decode( const THaEvData& evdata )
   // LoadData(evdata, hitinfo) hitinfo for each channel
   // StoreData(hitinfo,data) save data in member variables
 
-//  cout << "HYPTOFPlane::Decode" << endl;
-
-  UInt_t ievent = evdata.GetEvNum();
+  // cout << "HYPTOFPlane::Decode" << endl;
+  UInt_t evnum = evdata.GetEvNum();
+  //  cout << "Event Number: " << evnum << endl;
 
   fFADCData->Clear();
 
-  Int_t nhits = THaDetectorBase::Decode(evdata);
+  // Int_t nhits = THaDetectorBase::Decode(evdata);
 
-  /*
-  for(UInt_t i=0; i<fFADCData->GetSize(); i++) {
-    auto& fadc_hit = fFADCData->GetData(i);
-    cout << "PulseInt: " << i << " " << fadc_hit.fChan << " " << fadc_hit.fPulseIntegral << endl;
-  }
-  */
-  return nhits;
+  // FIXME: Need to add part for ref time
+
+  for( UInt_t i = 0; i < fDetMap->GetSize(); i++ ) {
+    THaDetMap::Module* d = fDetMap->GetModule(i);    
+    if( d->IsADC() ) {
+    // if( evdata.IsMultifunction(d->crate, d->slot) ) {
+    //  cout << "ADC: ROC: SLOT: " << d->crate << " " << d->slot << endl;
+      Int_t nhits = THaDetectorBase::Decode(evdata);
+      fNHits++;
+    }
+    else {
+
+      // Assume this is TDC
+      // cout << "This is TDC: " << d->crate << " " << d->slot << " " << d->GetModel() << endl;
+
+      for(UInt_t j = 0; j < evdata.GetNumChan(d->crate, d->slot); j++) {
+        UInt_t chan = evdata.GetNextChan(d->crate, d->slot, j);
+        if( chan < d->lo || chan > d->hi ) continue;
+        Int_t lchan = d->ConvertToLogicalChannel(chan);
+
+        UInt_t nhits = evdata.GetNumHits(d->crate, d->slot, chan);
+        for(UInt_t ihit = 0; ihit < nhits;  ihit++) {
+          UInt_t data = evdata.GetData(d->crate, d->slot, chan, ihit);
+        //  cout << "chan, lchan, nhit, hit, data: " << chan << " " << lchan << " " << nhits << " " << ihit << " " << data << endl;
+
+          fNHits++;
+        }
+      }
+
+  }// else
+}// for modules
+
+  return fNHits;
 }
 
 //__________________________________________________________________
 Int_t HYPTOFPlane::StoreHit( const DigitizerHitInfo_t& hitinfo, UInt_t data )
 {
-  cout << "call StoreHit: " << data << endl;
   Int_t nevents = fFADCData->AddHit(hitinfo);
 
-  return 0;
+  return nevents;
 }
 
 //__________________________________________________________________

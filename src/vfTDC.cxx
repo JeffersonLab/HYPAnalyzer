@@ -116,7 +116,7 @@ namespace Decoder {
 	if (fDebugFile)
 	  *fDebugFile << "vfTDCModule:: Block HEADER >> data = " 
 		      << hex << *p << " >> event number = " << dec 
-		      <<  << " >> slot number = "  
+		      << " >> slot number = "  
 		      << tdc_data.glb_hdr_slno << endl;
 #endif
       }
@@ -174,7 +174,11 @@ namespace Decoder {
         //
         //EJB and BS: May 4, 2025
         //
-        if(group >=1 and group <=4) {
+  // SP: use the original ch map for now
+  tdc_data.chan = group*32 + chan;
+
+/*
+    if(group >=1 and group <=4) {
 		if (chan <= 15) {
         		tdc_data.chan = (group*32 + chan + 16); // this is the flipped cable map
 		} else {
@@ -183,8 +187,8 @@ namespace Decoder {
 	} else {
 		tdc_data.chan = group*32 + chan;
 	}
-
-        tdc_data.raw = coarse*4000 + two_ns*2000 + fine*2000/124.87; // this should be the time in ps (from Tritium code)
+*/
+  tdc_data.raw = coarse*4000 + two_ns*2000 + fine*2000/124.87; // this should be the time in ps (from Tritium code)
 	// subtract off rolling trigger time
 	//cout << "Corrected TDC raw = " << tdc_data.raw << endl;
 	
@@ -193,8 +197,9 @@ namespace Decoder {
 		tdc_data.raw = tdc_data.raw + 1024*4000;
 	}
 	tdc_data.raw = tdc_data.raw - tdc_data.trig_time;
-	
-	/*if (tdc_data.ev_hdr_slno == 20) {
+	// cout << "Print Decoder: slot, gr, ch, tdc, trig_time: " << tdc_data.ev_hdr_slno << " " << group << " " << tdc_data.chan << " " << tdc_data.raw << " " << tdc_data.trig_time << endl;
+
+  /*if (tdc_data.ev_hdr_slno == 20) {
 		if (tdc_data.chan == 40) {
 			std::cout << "Slot 20 Chan 40 fix!" << std::endl;
 			if (tdc_data.opt == 1) {

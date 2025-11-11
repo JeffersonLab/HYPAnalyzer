@@ -36,9 +36,6 @@ THaAnalysisObject::EStatus HYPDCPlane::Init(const TDatime &date)
 Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
 {
   const char* const here = "ReadDatabase";
- 
-  string prefix = GetParent()->GetName();
-  prefix = prefix + "." + GetName() + ".";
 
   FILE* file = OpenFile(date);
   if ( !file ) return kFileError;
@@ -59,7 +56,7 @@ Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
     {nullptr}
   };
   
-  err = LoadDB(file, date, request, prefix.c_str());
+  err = LoadDB(file, date, request, GetPrefix());
   fclose(file);
   if( err )
     return err;
@@ -89,9 +86,9 @@ Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
 Int_t HYPDCPlane::ReadGeometry(FILE* file, const TDatime& date, Bool_t required)
 {
   // cout << "HYPDCPlane::ReadGeometry" << endl;
-
-  string prefix = GetParent()->GetName();
-  prefix = prefix + "." + GetName() + ".";
+ // cout << GetPrefix() << endl;
+ // string prefix = GetParent()->GetPrefix();
+ // prefix = prefix + "." + GetName() + ".";
 
   vector<Double_t> position(3), size(3), angles(3);
   DBRequest request[] = {
@@ -109,7 +106,7 @@ Int_t HYPDCPlane::ReadGeometry(FILE* file, const TDatime& date, Bool_t required)
   fSize[1] = 0.1;
   fSize[1] = 0.02;
   
-  Int_t err = LoadDB( file, date, request);
+  Int_t err = LoadDB( file, date, request, GetPrefix());
 
   if( err )
     return kInitError;
@@ -127,14 +124,16 @@ Int_t HYPDCPlane::ReadGeometry(FILE* file, const TDatime& date, Bool_t required)
 Int_t HYPDCPlane::DefineVariables( EMode mode )
 {
 
-  /*
   RVarDef vars[] = {
+    {"nhits",  "Number of raw TDC hits", "fNHits"},
+    {"chan",   "channel for a given hit","v_Chan"},
+    {"tdcraw", "Raw TDC",                "v_RawHitTDC"},
+    {"tdcopt", "TDC Option",             "v_RawHitOpt"},
     {nullptr}
   };
 
   return DefineVarsFromList(vars, mode);
-*/
-  return 0;
+
 }
 
 //__________________________________________________________________
@@ -142,6 +141,11 @@ void HYPDCPlane::Clear( Option_t* opt )
 {
   THaSubDetector::Clear(opt);
   fNHits = 0;
+  fTDCHit.clear();
+
+  v_RawHitTDC.clear();
+  v_RawHitOpt.clear();
+  v_Chan.clear();
 }
 
 //__________________________________________________________________
@@ -150,8 +154,9 @@ Int_t HYPDCPlane::Decode( const THaEvData& evdata )
   const char* const here = "Decode";
 
   UInt_t evnum = evdata.GetEvNum();
-  cout << "Event Number: " << evnum << endl;
+  //  cout << "Event Number: " << evnum << endl;
 
+  // Assume we only have TDC module
   // Loop over hits, allowing mullti hits for a channel
   auto hitIter = fDetMap->MakeMultiHitIterator(evdata);
   while(hitIter) {
@@ -163,11 +168,16 @@ Int_t HYPDCPlane::Decode( const THaEvData& evdata )
       continue;
     }
     
-    cout << "SLOT CH NHIT HIT DATA: " << hitinfo.slot << " "
-    << hitinfo.chan << " " << hitinfo.nhit << " " << hitinfo.hit << " " << evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit) << endl;
+    // cout << "SLOT CH NHIT HIT DATA: " << hitinfo.slot << " "
+    // << hitinfo.chan << " " << hitinfo.nhit << " " << hitinfo.hit << " " << evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit) << endl;
+    UInt_t chan = hitinfo.chan;
     UInt_t tdc = evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
     UInt_t tdc_opt = evdata.GetOpt(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
-    cout << "TDC, OPT: " << tdc << " " << tdc_opt << endl;
+    fTDCHit.emplace_back(chan, tdc, tdc_opt);
+
+    v_Chan.emplace_back(chan);
+    v_RawHitTDC.emplace_back(tdc);
+    v_RawHitOpt.emplace_back(tdc_opt);
 
     ++hitIter;
     fNHits++;

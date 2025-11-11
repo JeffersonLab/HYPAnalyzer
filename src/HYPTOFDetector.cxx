@@ -49,7 +49,7 @@ THaAnalysisObject::EStatus HYPTOFDetector::Init( const TDatime & date )
 //____________________________________________________________________________________
 Int_t HYPTOFDetector::Decode( const THaEvData& evdata )
 {        
-    cout << "HYPTOFDetector::Decode" << endl;
+    // cout << "HYPTOFDetector::Decode" << endl;
     // Decode for all planes
     for(Int_t i = 0; i < fNPlanes; i++)
         fPlanes[i]->Decode(evdata);
@@ -60,7 +60,7 @@ Int_t HYPTOFDetector::Decode( const THaEvData& evdata )
 //____________________________________________________________________________________
 Int_t HYPTOFDetector::ReadDatabase( const TDatime & date )
 {
-    cout << "HYPTOFDetector::ReadDatabase" << endl;
+    // cout << "HYPTOFDetector::ReadDatabase" << endl;
 
     FILE* file = OpenFile( date );
     if( !file ) return kFileError;

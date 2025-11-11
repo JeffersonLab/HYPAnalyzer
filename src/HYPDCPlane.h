@@ -34,6 +34,11 @@ class HYPDCPlane : public THaSubDetector {
     Int_t fNHits; // Total number of hits decoded
     Int_t fAxis;
 
+    // temporary output containers
+    vector<UInt_t> v_RawHitTDC;
+    vector<UInt_t> v_RawHitOpt;
+    vector<UInt_t> v_Chan;
+
     virtual Int_t ReadDatabase( const TDatime &date );
     virtual Int_t DefineVariables( EMode mode = kDefine );
     virtual Int_t ReadGeometry( FILE* file, const TDatime& date, Bool_t required = false);

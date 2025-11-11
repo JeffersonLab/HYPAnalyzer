@@ -1,4 +1,5 @@
 #include "HYPDC.h"
+#include <sstream>
 
 //________________________________________________________________
 HYPDC::HYPDC(const char* name, const char* description,
@@ -67,18 +68,18 @@ Int_t HYPDC::ReadDatabase( const TDatime& date )
 
     // Get the plane names: 1x1, 1x2, 1u1, ...
     vector<string> plane_names;
-    size_t pos1 = 0; 
-    size_t pos2 = plane_name_str.find(",");
-    while( pos2 != string::npos ) {
-      string temp = plane_name_str.substr(pos1, pos2 - pos1);
-      plane_names.push_back(temp);
-      pos1 = pos2 + 1;
-      pos2 = plane_name_str.find(",",pos1);
-    }
-
+    // remove ""
+    plane_name_str.erase(0,1);
+    plane_name_str.pop_back();
+    stringstream ss(plane_name_str);
+    string temp_name;
+    while(ss >> temp_name)
+      plane_names.emplace_back(temp_name);
+    
     // Define planes
     for(Int_t i = 0; i < fNPlanes; i++) {
-        fPlanes.emplace_back(new HYPDCPlane(Form("%s", plane_names[i].c_str()), Form("DC Plane %s", plane_names[i].c_str()), this));
+    //  cout << "Plane Names: " << plane_names[i] << endl;
+      fPlanes.emplace_back(new HYPDCPlane(Form("%s", plane_names[i].c_str()), Form("DC Plane %s", plane_names[i].c_str()), this));
     }
 
   return kOK;

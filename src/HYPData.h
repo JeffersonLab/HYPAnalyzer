@@ -57,24 +57,7 @@ namespace HYPData {
     std::vector<FADCHit>  fPulseData;
     std::vector<uint32_t> fSampleData;  
   };
-  // TDC module data
-  // class TDCData : Podd::TDCData {
-  /*
-  class TDCData {
-  public:
-    TDCData() {}
-    virtual ~TDCData() {}  
 
-    Int_t      AddHit( const DigitizerHitInfo_t& hitinfo );
-    TDCHit&    GetData( size_t i ) { return fTDCData[i]; }
-    size_t     GetSize() const { return fTDCData.size(); }
-    void       Clear();
-    
-  protected:
-    Int_t fNHits;
-    std::vector<TDCHit> fTDCData;
-  };
-  */
 }
 
 #endif
