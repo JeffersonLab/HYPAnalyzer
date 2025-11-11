@@ -1,0 +1,201 @@
+#include "HYPDCPlane.h"
+#include "THaDetMap.h"
+#include "THaEvData.h"
+#include "VarType.h"
+#include "vfTDC.h"
+#include <cstdlib>
+
+using namespace std;
+
+//__________________________________________________________________
+HYPDCPlane::HYPDCPlane( const char* name, const char* description, 
+  THaDetectorBase *parent) :
+  THaSubDetector(name, description, parent),
+  fNHits(0), fAxis(0)
+{
+  // constructor
+}
+
+//__________________________________________________________________
+HYPDCPlane::~HYPDCPlane()
+{
+  RemoveVariables();
+}
+
+//__________________________________________________________________
+THaAnalysisObject::EStatus HYPDCPlane::Init(const TDatime &date)
+{
+  EStatus status;
+  if( (status = THaSubDetector::Init(date)) )
+    return fStatus = status;
+  return fStatus = kOK;
+
+}
+
+//__________________________________________________________________
+Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
+{
+  const char* const here = "ReadDatabase";
+
+  FILE* file = OpenFile(date);
+  if ( !file ) return kFileError;
+
+  
+  // Read Geometry 
+  Int_t err = ReadGeometry(file, date, true);
+  if( err ) {
+    fclose(file);
+    return err;
+  }
+
+  vector<Int_t> detmap;
+  UInt_t nelem;
+  DBRequest request[] = {
+    {"detmap",  &detmap,  kIntV},
+    {"nwires",   &nelem,   kInt},
+    {nullptr}
+  };
+  
+  err = LoadDB(file, date, request, GetPrefix());
+  fclose(file);
+  if( err )
+    return err;
+
+//  if( FillDetMap(detmap, THaDetMap::kFillLogicalChannel, here) <= 0 )
+  if( FillDetMap(detmap, THaDetMap::kFillModel | THaDetMap::kFillRefChan, here) <= 0 )
+    return kInitError;
+
+  // Check parent detector initialization
+  if ( fDC ) {
+    assert(fDC->Status() == kOK);
+  }
+
+  cout << "HYPDCPlane::ReadDatabase " << fDetMap->GetSize() << endl;  
+  // For vfTDC modules
+  for(UInt_t i = 0; i < (UInt_t)fDetMap->GetSize(); i++ ){
+    THaDetMap::Module* d = fDetMap->GetModule(i);
+    cout << "Module: " << d->crate << " " << d->slot << " " << d->GetModel() << endl;
+    if( d->GetModel() == 527 )
+      d->MakeTDC();
+  }
+
+  return kOK;
+}
+
+//__________________________________________________________________
+Int_t HYPDCPlane::ReadGeometry(FILE* file, const TDatime& date, Bool_t required)
+{
+  // cout << "HYPDCPlane::ReadGeometry" << endl;
+ // cout << GetPrefix() << endl;
+ // string prefix = GetParent()->GetPrefix();
+ // prefix = prefix + "." + GetName() + ".";
+
+  vector<Double_t> position(3), size(3), angles(3);
+  DBRequest request[] = {
+    { "position", &position, kDoubleV, 0, required, 0, "detector position [m]"},
+    { "size",     &size,     kDoubleV, 0, required, 0, "detector size [m]"},
+    {nullptr}
+  };
+
+  // Default values
+  position[0] = 0.0;
+  position[1] = 0.0;
+  position[2] = 0.0;
+  
+  fSize[0] = 1.0; 
+  fSize[1] = 0.1;
+  fSize[1] = 0.02;
+  
+  Int_t err = LoadDB( file, date, request, GetPrefix());
+
+  if( err )
+    return kInitError;
+
+  if( ! size.empty() ) {
+    fSize[0] = size[0];
+    fSize[1] = size[1];
+    fSize[2] = size[2];    
+  }
+
+  return kOK;
+}
+
+//__________________________________________________________________
+Int_t HYPDCPlane::DefineVariables( EMode mode )
+{
+
+  RVarDef vars[] = {
+    {"nhits",  "Number of raw TDC hits", "fNHits"},
+    {"chan",   "channel for a given hit","v_Chan"},
+    {"tdcraw", "Raw TDC",                "v_RawHitTDC"},
+    {"tdcopt", "TDC Option",             "v_RawHitOpt"},
+    {nullptr}
+  };
+
+  return DefineVarsFromList(vars, mode);
+
+}
+
+//__________________________________________________________________
+void HYPDCPlane::Clear( Option_t* opt )
+{
+  THaSubDetector::Clear(opt);
+  fNHits = 0;
+  fTDCHit.clear();
+
+  v_RawHitTDC.clear();
+  v_RawHitOpt.clear();
+  v_Chan.clear();
+}
+
+//__________________________________________________________________
+Int_t HYPDCPlane::Decode( const THaEvData& evdata )
+{
+  const char* const here = "Decode";
+
+  //  UInt_t evnum = evdata.GetEvNum();
+  //  cout << "Event Number: " << evnum << endl;
+
+  // Assume we only have TDC module
+  // Loop over hits, allowing mullti hits for a channel
+  auto hitIter = fDetMap->MakeMultiHitIterator(evdata);
+  while(hitIter) {
+    const auto& hitinfo = *hitIter;
+    OptUInt_t data = LoadData(evdata, hitinfo);
+    if( ! data ) {
+      // Data could not be retrieved (probably decoder bug)
+      DataLoadWarning(hitinfo, here);
+      continue;
+    }
+    
+    // cout << "SLOT CH NHIT HIT DATA: " << hitinfo.slot << " "
+    // << hitinfo.chan << " " << hitinfo.nhit << " " << hitinfo.hit << " " << evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit) << endl;
+    UInt_t chan = hitinfo.chan;
+    UInt_t tdc = evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
+    UInt_t tdc_opt = evdata.GetOpt(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
+    fTDCHit.emplace_back(chan, tdc, tdc_opt);
+
+    v_Chan.emplace_back(chan);
+    v_RawHitTDC.emplace_back(tdc);
+    v_RawHitOpt.emplace_back(tdc_opt);
+
+    ++hitIter;
+    fNHits++;
+  }
+
+  return fNHits;
+}
+
+//__________________________________________________________________
+Int_t HYPDCPlane::CoarseProcess( TClonesArray& tracks )
+{
+  return 0;
+}
+
+//__________________________________________________________________
+Int_t HYPDCPlane::FineProcess( TClonesArray& tracks )
+{
+  return 0;
+}
+
+ClassImp(HYPDCPlane)

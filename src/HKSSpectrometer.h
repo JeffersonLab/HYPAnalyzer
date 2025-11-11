@@ -2,7 +2,6 @@
 #define HKSSpectrometer_h
 
 #include "THaSpectrometer.h"
-#include "DC.h"
 
 class HKSSpectrometer : public THaSpectrometer {
  public:  
@@ -11,12 +10,8 @@ class HKSSpectrometer : public THaSpectrometer {
 
   virtual Int_t FindVertices( TClonesArray& tracks );
   virtual Int_t TrackCalc();
-
-  virtual EStatus Init( const TDatime& date );
   
  protected:
-
-  DC* fDC;
   
   virtual Int_t ReadDatabase( const TDatime& date );
   virtual Int_t ReadRunDatabase( const TDatime& date );
