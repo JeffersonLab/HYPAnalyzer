@@ -32,6 +32,11 @@ namespace Decoder {
     virtual UInt_t GetData( UInt_t chan, UInt_t hit) const;
     virtual UInt_t GetOpt( UInt_t chan, UInt_t hit) const;
 
+    virtual UInt_t GetTriggerTime() const;
+    virtual UInt_t GetCoarseTime( UInt_t chan, UInt_t hit ) const;
+    virtual UInt_t GetFineTime( UInt_t chan, UInt_t hit ) const;
+    virtual UInt_t Get2nsBit( UInt_t chan, UInt_t hit ) const;
+
     // Loads slot data.  if you don't define this, the base class's method is used
     virtual UInt_t LoadSlot( THaSlotData *sldat, const UInt_t *evbuffer, const UInt_t *pstop );
     // Loads slot data for bank structures
@@ -42,6 +47,9 @@ namespace Decoder {
     std::vector<UInt_t> fNumHits;
     std::vector<UInt_t> fTdcData;  // Raw data
     std::vector<UInt_t> fTdcOpt;  // Edge flag =0 Leading edge, = 1 Trailing edge
+    std::vector<UInt_t> fCoarseTime;
+    std::vector<UInt_t> fFineTime;
+    std::vector<UInt_t> f2nsBit;
 
     THaSlotData *slot_data;  // Need to fix if multi-threading becomes available
    
@@ -51,8 +59,8 @@ namespace Decoder {
       glb_hdr_evno(0), glb_hdr_slno(0), evh_trig_num(0), ev_hdr_slno(0), chan(0), raw(0), opt(0),trig_time_l(0),trig_time_h(0), trig_time(0),
         status(0) {}
       void clear() { memset(this, 0, sizeof(tdcData)); }
-      Int_t glb_hdr_evno, glb_hdr_slno, evh_trig_num, ev_hdr_slno;
-      Int_t chan, raw , opt; 
+      UInt_t glb_hdr_evno, glb_hdr_slno, evh_trig_num, ev_hdr_slno;
+      UInt_t chan, raw , opt; 
       Long64_t trig_time_l,trig_time_h;
       Long64_t trig_time;
       Int_t status;
