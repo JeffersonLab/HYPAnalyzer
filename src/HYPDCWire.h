@@ -33,7 +33,7 @@ private:
   HYPDCWire( const HYPDCWire& );
   HYPDCWire& operator=( const HYPDCWire& );
 
-  ClassDef(HYDCWire,0);
+  ClassDef(HYPDCWire,0);
 };
 
 #endif

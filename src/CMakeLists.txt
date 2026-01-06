@@ -12,7 +12,10 @@ set(PACKAGE HYP)
 set(src
   HKSSpectrometer.cxx
   HYPDC.cxx
+  HYPDCChamber.cxx
   HYPDCPlane.cxx
+  HYPDCHit.cxx
+  HYPDCWire.cxx
   HYPTOFPlane.cxx
   HYPTOFDetector.cxx
   HYPCherenkov.cxx  
