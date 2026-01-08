@@ -16,6 +16,7 @@ set(src
   HYPDCPlane.cxx
   HYPDCHit.cxx
   HYPDCWire.cxx
+  HYPDCCluster.cxx
   HYPTOFPlane.cxx
   HYPTOFDetector.cxx
   HYPCherenkov.cxx  

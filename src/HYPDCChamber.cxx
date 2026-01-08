@@ -113,6 +113,9 @@ Int_t HYPDCChamber::DefineVariables( EMode mode )
 //____________________________________________________
 Int_t HYPDCChamber::CoarseTrack( TClonesArray& tracks )
 {
+
+  FindSpacePoints(); 
+
   return 0;
 }
 
@@ -139,8 +142,6 @@ void HYPDCChamber::ProcessHits()
 //____________________________________________________
 Int_t HYPDCChamber::FindSpacePoints()
 {
-
-
 
   return 0;
 

@@ -33,7 +33,7 @@ class HYPDCPlane : public THaSubDetector {
     HYPDCWire*    GetWire(Int_t i) const 
     { assert( i>=0 && i<=GetNWires() );
       return (HYPDCWire*)fWires->UncheckedAt(i); }
-      
+          
   protected:
 
     Int_t fNHits; // Total number of hits decoded

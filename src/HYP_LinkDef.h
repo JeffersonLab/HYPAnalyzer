@@ -13,6 +13,7 @@
 #pragma link C++ class HYPDCChamber+;
 #pragma link C++ class HYPDCPlane+;
 #pragma link C++ class HYPDCWire+;
+#pragma link C++ class HYPDCCluster+;
 #pragma link C++ class HYPCherenkov+;
 #pragma link C++ class HYPTOFDetector+;
 #pragma link C++ class HYPTOFPlane+;
