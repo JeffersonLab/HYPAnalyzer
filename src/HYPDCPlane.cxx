@@ -17,7 +17,7 @@ HYPDCPlane::HYPDCPlane( const char* name, const char* description,
   // constructor
 
   fHits = new TClonesArray("HYPDCHit", 100);
-  fWires = new TClonesArray("HYPDCWire", 100);
+  fWires = new TClonesArray("HYPDCWire", 160);
 }
 
 //__________________________________________________________________
@@ -32,9 +32,11 @@ HYPDCPlane::~HYPDCPlane()
 //__________________________________________________________________
 THaAnalysisObject::EStatus HYPDCPlane::Init(const TDatime &date)
 {
+
   EStatus status;
   if( (status = THaSubDetector::Init(date)) )
     return fStatus = status;
+  
   return fStatus = kOK;
 
 }
@@ -47,7 +49,6 @@ Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
   FILE* file = OpenFile(date);
   if ( !file ) return kFileError;
 
-  
   // Read Geometry 
   Int_t err = ReadGeometry(file, date, true);
   if( err ) {
@@ -89,7 +90,7 @@ Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
   for(int i = 0; i < nelem; i++) {
     Double_t pos = 0.0; // FIXME: calculate wire position 
     Double_t offset = 0.0; // FIXME: tdc offset -- read from DB?
-    new((*fWires)[i]) HYPDCWire(i, fAxis, pos, offset);
+    new((*fWires)[i]) HYPDCWire(i+1, fAxis, pos, offset);
   }
 
   return kOK;
@@ -99,9 +100,6 @@ Int_t HYPDCPlane::ReadDatabase( const TDatime& date )
 Int_t HYPDCPlane::ReadGeometry(FILE* file, const TDatime& date, Bool_t required)
 {
   // cout << "HYPDCPlane::ReadGeometry" << endl;
- // cout << GetPrefix() << endl;
- // string prefix = GetParent()->GetPrefix();
- // prefix = prefix + "." + GetName() + ".";
 
   vector<Double_t> position(3), size(3), angles(3);
   DBRequest request[] = {
@@ -144,7 +142,6 @@ Int_t HYPDCPlane::DefineVariables( EMode mode )
     {"tdcopt",  "TDC Option",             "v_RawHitOpt"},
     {"wire",    "Wire numbers with hits", "fHits.HYPDCHit.GetWireNum()"},
     {"time_nc", "Time no ref corrected",  "fHits.HYPDCHit.GetTime()"},
-    {"plane",    "U,V,X plane",           "fHits.HYPDCHit.GetAxis()"},
     {nullptr}
   };
 
@@ -155,6 +152,8 @@ Int_t HYPDCPlane::DefineVariables( EMode mode )
 //__________________________________________________________________
 void HYPDCPlane::Clear( Option_t* opt )
 {
+  cout << "HYPDCPlane::Clear" << endl;
+
   THaSubDetector::Clear(opt);
   fNHits = 0;
   fHits->Clear();
@@ -169,7 +168,6 @@ void HYPDCPlane::Clear( Option_t* opt )
 Int_t HYPDCPlane::Decode( const THaEvData& evdata )
 {
   const char* const here = "Decode";
-
   //  UInt_t evnum = evdata.GetEvNum();
   //  cout << "Event Number: " << evnum << endl;
 
@@ -184,17 +182,18 @@ Int_t HYPDCPlane::Decode( const THaEvData& evdata )
       continue;
     }
     
-    // cout << "SLOT CH NHIT HIT DATA: " << hitinfo.slot << " "
-    // << hitinfo.chan << " " << hitinfo.nhit << " " << hitinfo.hit << " " << evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit) << endl;
+    //cout << "SLOT CH lCH NHIT HIT DATA: " << hitinfo.slot << " "
+    // << hitinfo.chan << " " << hitinfo.chan << " " << hitinfo.nhit << " " << hitinfo.hit << " " << evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit) << endl;
     UInt_t chan = hitinfo.chan;
     UInt_t tdc = evdata.GetData(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
     UInt_t tdc_opt = evdata.GetOpt(hitinfo.crate, hitinfo.slot, hitinfo.chan, hitinfo.hit);
 
+    // Temporary output containers
     v_Chan.emplace_back(chan);
     v_RawHitTDC.emplace_back(tdc);
     v_RawHitOpt.emplace_back(tdc_opt);
 
-    HYPDCWire* wire = GetWire(hitinfo.lchan);
+    HYPDCWire* wire = GetWire(hitinfo.chan);
     Double_t time = tdc * 1.0; // FIXME: calculate time
     //Double_t time = - rawtdc*fNSperChan + fPlaneTimeZero - wire->GetTOffset(); // fNSperChan > 0 for 1877
     new((*fHits)[fNHits]) HYPDCHit(wire, tdc, time);

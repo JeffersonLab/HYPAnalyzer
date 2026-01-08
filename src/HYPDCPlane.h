@@ -31,8 +31,8 @@ class HYPDCPlane : public THaSubDetector {
     TClonesArray* GetHits()        const { return fHits; }
     Int_t         GetNHits()       const { return fHits->GetLast()+1; }
     HYPDCWire*    GetWire(Int_t i) const 
-    { assert( i>=1 && i<=GetNWires() );
-      return (HYPDCWire*)fWires->UncheckedAt(i-1); }
+    { assert( i>=0 && i<=GetNWires() );
+      return (HYPDCWire*)fWires->UncheckedAt(i); }
       
   protected:
 
@@ -46,7 +46,7 @@ class HYPDCPlane : public THaSubDetector {
     vector<UInt_t> v_RawHitTDC;
     vector<UInt_t> v_RawHitOpt;
     vector<UInt_t> v_Chan;
-
+    
     virtual Int_t ReadDatabase( const TDatime &date );
     virtual Int_t DefineVariables( EMode mode = kDefine );
     virtual Int_t ReadGeometry( FILE* file, const TDatime& date, Bool_t required = false);

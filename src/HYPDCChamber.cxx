@@ -1,5 +1,7 @@
 #include "HYPDCChamber.h"
+#include "THaApparatus.h"
 #include <sstream>
+#include <string>
 
 //____________________________________________________
 HYPDCChamber::HYPDCChamber( const char* name, const char* description, 
@@ -21,12 +23,28 @@ HYPDCChamber::~HYPDCChamber()
 }
 
 //____________________________________________________
+void HYPDCChamber::MakePrefix()
+{
+  TString prefix =  GetApparatus()->GetName()[0];
+  prefix.Append(".");
+  prefix += GetName();
+  prefix.Append(".");
+
+  delete [] fPrefix;
+  fPrefix = new char[ prefix.Length()+1 ];
+  strcpy( fPrefix, prefix.Data() );
+}
+
+//____________________________________________________
 THaAnalysisObject::EStatus HYPDCChamber::Init(const TDatime &date)
 {
+
+  // cout << "HYPDCChamber::Init()" << endl;
+
   EStatus status;
+  // calls ReadDatabaseas and DefineVariables
   if( (status = THaSubDetector::Init(date)) )
     return fStatus = status;
-  return fStatus = kOK;
 
   // Init planes
   FILE* file = OpenFile( date );
@@ -39,7 +57,7 @@ THaAnalysisObject::EStatus HYPDCChamber::Init(const TDatime &date)
         {nullptr}
     };
 
-  Int_t err = LoadDB(file, date, request);
+  Int_t err = LoadDB(file, date, request, GetPrefix());
   if(err) {
     fclose(file);
     return kInitError;
@@ -54,10 +72,10 @@ THaAnalysisObject::EStatus HYPDCChamber::Init(const TDatime &date)
   string temp_name;
   while(ss >> temp_name)
     plane_names.emplace_back(temp_name);
-  
+
   // Define planes
   for(Int_t i = 0; i < fNPlanes; i++) {
-  //  cout << "Plane Names: " << plane_names[i] << endl;
+    // cout << "Plane Names: " << plane_names[i] << endl;
     fPlanes.emplace_back(new HYPDCPlane(Form("%s", plane_names[i].c_str()), Form("DC Plane %s", plane_names[i].c_str()), this));
   }
 
@@ -67,6 +85,7 @@ THaAnalysisObject::EStatus HYPDCChamber::Init(const TDatime &date)
       return fStatus = status;
   }
 
+  return fStatus = kOK;
 }
 
 //____________________________________________________
@@ -121,9 +140,8 @@ void HYPDCChamber::ProcessHits()
 Int_t HYPDCChamber::FindSpacePoints()
 {
 
-  // this should be called from DCDetector class. 
 
-  // Simple method to find space points
+
   return 0;
 
 }

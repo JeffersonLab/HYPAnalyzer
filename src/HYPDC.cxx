@@ -30,26 +30,10 @@ THaAnalysisObject::EStatus HYPDC::Init( const TDatime& date )
   if((status = THaTrackingDetector::Init( date )))
     return fStatus = status;
 
-  // Init Chambers
-  FILE* file = OpenFile( date );
-  if( !file ) return kFileError;
-
-  // read parameters needed to init chamber 
-  DBRequest request[] = {
-    {"nchambers", &fNChambers, kInt},
-    {nullptr}
-  };
-  Int_t err = LoadDB(file, date, request);
-  if(err) {
-    fclose(file);
-    return kInitError;
-  }
-
-  // Define chamber obj
+  // Define and Init Chambers
   for(Int_t i = 0; i < fNChambers; i++) {
-    fChambers.emplace_back(new HYPDCChamber(Form("dc%d",i), Form("DC Chamber %d", i), this));
+    fChambers.emplace_back(new HYPDCChamber(Form("dc%d",i+1), Form("DC Chamber %d", i+1), this));
   }
-
   for(auto &chamber : fChambers ) {
     status = chamber->Init(date);
     if(status != kOK) return fStatus = status;
@@ -69,13 +53,29 @@ Int_t HYPDC::ReadDatabase( const TDatime& date )
   // Read parameters 
   // Called by ThaDetectorBase::Init()   
 
+  FILE* file = OpenFile( date );
+  if( !file ) return kFileError;
+
+  DBRequest request[] = {
+    {"nchambers", &fNChambers, kInt},
+    {nullptr}
+  };
+  Int_t err = LoadDB(file, date, request,GetPrefix());
+  if(err) {
+    fclose(file);
+    return kInitError;
+  }
+
   return kOK;
 }
 
 //________________________________________________________________
 Int_t HYPDC::Decode( const THaEvData& evdata )
 {
-  // Do nothing, decoding done in HYPDCPlane
+   for(Int_t i = 0; i < fNChambers; i++){
+    fChambers[i]->Decode(evdata);
+  }
+
   return 0;
 }
 

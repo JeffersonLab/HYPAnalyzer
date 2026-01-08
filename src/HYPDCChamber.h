@@ -33,6 +33,7 @@ protected:
   std::vector<HYPDCHit*> fHits;
 
 //  virtual Int_t  ReadDatabase( const TDatime& date );
+  virtual void   MakePrefix();
   virtual Int_t  DefineVariables( EMode mode = kDefine );
   virtual Int_t  FindSpacePoints() ;
 

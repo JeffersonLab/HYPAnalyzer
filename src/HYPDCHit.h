@@ -12,13 +12,13 @@ public:
     : fWire(wire), fTDC(tdc), fTime(time), fDist(kBig) {}
   virtual ~HYPDCHit() {}
 
-  Double_t   GetTime() const { return fTime; }
+  Double_t   GetTime()    const { return fTime; }
   Double_t   GetDist()    const { return fDist; }
-  Int_t      GetWireNum() const { return fWire->GetWireNum(); }
+  Int_t      GetWireNum() const { return fWire->GetNum(); }
   Double_t   GetPos()     const { return fWire->GetPos(); }
   Int_t      GetAxis()    const { return fWire->GetAxis(); }
   Int_t      Compare( const TObject* obj ) const;  // to sort hits
-  HYPDCWire* GetWire() const { return fWire; }
+  HYPDCWire* GetWire()    const { return fWire; }
   
   void Print( Option_t* opt ) const;
   void SetWire(HYPDCWire* wire) { fWire = wire; }

@@ -10,7 +10,7 @@ public:
     fWireNum(wire_num), fPos(pos), fTOffset(offset) {}
   virtual ~HYPDCWire() {}
 
-  Int_t    GetWireNum() const { return fWireNum; }
+  Int_t    GetNum() const { return fWireNum; }
   Int_t    GetFlag()    const { return fFlag; }
   Double_t GetPos()     const { return fPos; }
   Double_t GetTOffset() const { return fTOffset; }
