@@ -3,10 +3,7 @@
 
 #include "HYPDCPlane.h"
 #include "HYPDCHit.h"
-<<<<<<< HEAD
-=======
 #include "HYPDCCluster.h"
->>>>>>> dc
 
 struct DCSpacePoint {
   Double_t x;

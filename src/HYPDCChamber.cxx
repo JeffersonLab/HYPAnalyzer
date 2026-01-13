@@ -1,8 +1,5 @@
 #include "HYPDCChamber.h"
-<<<<<<< HEAD
-=======
 #include "HYPDCCluster.h"
->>>>>>> dc
 #include "THaApparatus.h"
 #include <sstream>
 #include <string>

@@ -45,21 +45,12 @@ class HYPDCPlane : public THaSubDetector {
     HYPDCWire*    GetWire(Int_t i) const 
     { assert( i>=0 && i<=GetNWires() );
       return (HYPDCWire*)fWires->UncheckedAt(i); }
-
-    TClonesArray* GetHits()        const { return fHits; }
-    Int_t         GetNHits()       const { return fHits->GetLast()+1; }
-    HYPDCWire*    GetWire(Int_t i) const 
-    { assert( i>=0 && i<=GetNWires() );
-      return (HYPDCWire*)fWires->UncheckedAt(i); }
           
   protected:
 
     Int_t fNHits; // Total number of hits decoded
     Int_t fAxis;
     Int_t fPlaneNum;
-
-    TClonesArray* fHits;
-    TClonesArray* fWires;
 
     TClonesArray* fHits;
     TClonesArray* fWires;
