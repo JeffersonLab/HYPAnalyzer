@@ -3,19 +3,20 @@
 
 #include "THaSubDetector.h"
 #include "TClonesArray.h"
-#include "HYPData.h"
+#include <cassert>
+#include <cmath>
 #include "HYPDCWire.h"
-#include "HYPDCCluster.h"
+#include "HYPDCHit.h"
+
+class THcDCTimeToDistConv;
+class HYPDC;
 
 using namespace std;
-using namespace HYPData;
 
 namespace DC {
   enum Axis{ kX = 0, kU, kV, kUX, kVX};
 }
-
-class HYPDC;
-
+ 
 class HYPDCPlane : public THaSubDetector {
   public:
     HYPDCPlane( const char *name, const char* description, THaDetectorBase *parent = nullptr );
@@ -25,23 +26,36 @@ class HYPDCPlane : public THaSubDetector {
     virtual EStatus Init( const TDatime &date );
     virtual Int_t   Decode( const THaEvData& );
   
+    //    virtual Int_t   Print( Option_t* opt ="" ) const;
+    void  SetPlaneIndex(Int_t i) { fPlaneIndex = i; }
     void  SetPlaneNum(Int_t i) { fPlaneNum = i; }
     void  SetAxis(Int_t axis) { fAxis = axis; }
     void  SetXsp(Double_t x) { fXsp = x; }
     void  SetYsp(Double_t y) { fYsp = y; }
     
-
-    Int_t GetAxis() { return fAxis; }
-//    virtual Int_t   Print( Option_t* opt ="" ) const;
-    Double_t      GetZ()           const { return fCenter[2]; }
+    Int_t         GetAxis() { return fAxis; }
+    double_t      GetZ()           const { return fCenter[2]; }
     Double_t      GetXsp()         const { return fXsp; }
     Double_t      GetYsp()         const { return fYsp; }
     Int_t         GetPlaneNum()    const { return fPlaneNum; }
+    Int_t         GetChamberNum()  const { return fChamberNum; }
+    Int_t         GetPlaneIndex()  const { return fPlaneIndex; }
+    Int_t         GetReadoutX()    const { return fReadoutX; }
+    Double_t      GetReadoutCorr() const { return fReadoutCorr; }
+    Double_t      GetCentralTime() const { return fCentralTime; }
+    Int_t         GetDriftTimeSign() const { return fDriftTimeSign; }
+    Double_t      GetBeta()        const { return fBeta; }
+    Double_t      GetSigma()       const { return fSigma; }
+    Double_t      GetPsi0()        const { return fPsi0; }
+    Double_t*     GetStubCoef()  { return fStubCoef; }
+    Double_t*     GetPlaneCoef() { return fPlaneCoef; }
+
     Int_t         GetNHits()       const { return fHits->GetLast()+1; }
     TClonesArray* GetHits()        const { return fHits; }
     HYPDCHit*     GetHit(Int_t i)  const 
     { assert( i>=0 && i<GetNHits() );
       return (HYPDCHit*)fHits->UncheckedAt(i); }
+    Int_t         GetNWires()      const { return fWires->GetLast()+1; }
     HYPDCWire*    GetWire(Int_t i) const 
     { assert( i>=0 && i<=GetNWires() );
       return (HYPDCWire*)fWires->UncheckedAt(i); }
@@ -64,6 +78,18 @@ class HYPDCPlane : public THaSubDetector {
     TVector3 fCenter;
     Double_t fXsp;
     Double_t fYsp;
+
+    Int_t fPlaneIndex;
+    Int_t fChamberNum;
+    Int_t fReadoutX;
+    Double_t fReadoutCorr;
+    Double_t fCentralTime;
+    Int_t fDriftTimeSign;
+    Double_t fBeta;
+    Double_t fSigma;
+    Double_t fPsi0;
+    Double_t* fStubCoef;
+    Double_t* fPlaneCoef;
 
     virtual Int_t ReadDatabase( const TDatime &date );
     virtual Int_t DefineVariables( EMode mode = kDefine );

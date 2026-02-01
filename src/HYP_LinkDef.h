@@ -21,5 +21,6 @@
 #pragma link C++ class HYPData::TDCData+;
 #pragma link C++ class Decoder::vfTDCModule+;
 #pragma link C++ class HYPRawAdcHit+;
+#pragma link C++ class DCDetector+;
 
 #endif

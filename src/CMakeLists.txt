@@ -23,6 +23,7 @@ set(src
   HYPData.cxx
   HYPRawAdcHit.cxx
   vfTDC.cxx
+  DCDetector.cxx
 )
 
 # Headers
@@ -52,7 +53,7 @@ target_include_directories(${PACKAGE}
 #target_link_libraries(${PACKAGE} PUBLIC Podd::HallA)
 #target_link_libraries(${PACKAGE} PUBLIC ${ROOT_LIBRARIES})
 
-target_link_libraries(${PACKAGE} PUBLIC Podd::Decode Podd::HallA)
+target_link_libraries(${PACKAGE} PUBLIC hcana::HallC)
 
 include(GNUInstallDirs)
 

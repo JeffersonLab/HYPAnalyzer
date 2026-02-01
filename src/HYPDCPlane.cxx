@@ -1,5 +1,5 @@
 #include "HYPDCPlane.h"
-#include "HYPDCHit.h"
+#include "THcDCHit.h"
 #include "THaDetMap.h"
 #include "THaEvData.h"
 #include "VarType.h"
