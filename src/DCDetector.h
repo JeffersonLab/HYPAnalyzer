@@ -4,9 +4,10 @@
 #include "THcDC.h"
 
 class DCDetector : public THcDC {
- DCDetector( const char* name, const char* description = "",
-		   THaApparatus* a = NULL );
-  virtual ~DCDetector(); 
+  public:
+    DCDetector( const char* name, const char* description = "",
+          THaApparatus* a = NULL );
+      virtual ~DCDetector(); 
 
   ClassDef(DCDetector,0)
 
