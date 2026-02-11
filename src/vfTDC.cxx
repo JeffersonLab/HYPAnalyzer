@@ -177,10 +177,12 @@ namespace Decoder {
 	*/
 	tdc_data.raw = coarse*4000 + two_ns*2000 + fine*2000/124.87; // this should be the time in ps (from Tritium code)
 	
-	if (tdc_data.raw < tdc_data.trig_time) {
-	  tdc_data.raw = tdc_data.raw + 1024*4000;
-	}
 	// SP: Let's not subtract trigger time here
+
+  //	if (tdc_data.raw < tdc_data.trig_time) {
+	//  tdc_data.raw = tdc_data.raw + 1024*4000;
+	// }
+
   //tdc_data.raw = tdc_data.raw - tdc_data.trig_time;
 
 	// cout << "Print Decoder: slot, gr, ch, tdc, trig_time: "
