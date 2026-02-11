@@ -15,13 +15,14 @@ set(src
   HYPDCChamber.cxx
   HYPDCPlane.cxx
   HYPDCHit.cxx
-  HYPDCWire.cxx
   HYPDCCluster.cxx
+  HYPSpacePoint.cxx
+  HYPDCTrack.cxx
   HYPTOFPlane.cxx
   HYPTOFDetector.cxx
   HYPCherenkov.cxx  
-  HYPData.cxx
   HYPRawAdcHit.cxx
+  HYPData.cxx
   vfTDC.cxx
   DCDetector.cxx
 )
