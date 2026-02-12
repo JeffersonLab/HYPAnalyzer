@@ -9,7 +9,7 @@ class HYPSpacePoint : public TObject {
 public:
 
   HYPSpacePoint(Int_t nhits=0, Int_t ncombos=0) :
-  fNHits(nhits), fNCombos(ncombos),fSetStubFlag(kFALSE) {
+  fNHits(nhits), fNCombos(ncombos),fSetStubFlag(kFALSE), fChi2(1.e10) {
     fHits.clear();
   }
   virtual ~HYPSpacePoint() {}
@@ -68,6 +68,9 @@ public:
   Double_t GetStubY() {return fStub[1];};
   Double_t GetStubYP() {return fStub[3];};
 
+  Double_t GetChi2() const { return fChi2; }
+  void     SetChi2(Double_t chi2) { fChi2 = chi2; }
+
   // This is the chamber number (1,2), not index (0,1).  Sometime
   // we need figure out how to avoid confusion between number and index.
   Int_t fNChamber;
@@ -85,6 +88,8 @@ protected:
   Double_t fStub[4];
   Bool_t fSetStubFlag;
   // Should we also have a pointer back to the chamber object
+  
+  Double_t fChi2; // min chi2 value from stub finding
 
   ClassDef(HYPSpacePoint,0);   // Space Point/stub track in a single drift chamber
 };
