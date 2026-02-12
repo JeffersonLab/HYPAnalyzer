@@ -240,18 +240,20 @@ if( mode == kDefine && fIsSetup ) return kOK;
      "fRawHits.HYPDCHit.GetWireNum()"},
     {"wirenum", "List of TDC wire number (select first hit in TDc window",
      "fHits.HYPDCHit.GetWireNum()"},
-    {"rawnorefcorrtdc", "Raw TDC Values",
-     "fRawHits.HYPDCHit.GetRawNoRefCorrTime()"},
-    {"rawtdc", "Raw TDC with reference time subtracted Values",
-     "fRawHits.HYPDCHit.GetRawTime()"},
-    {"time","Drift times",
+    {"timeraw", "Raw time with trigger time subtracted, in ns",
+     "fHits.HYPDCHit.GetRawTime()"},
+    {"raw.refcortime", "Raw time with reference time subtracted Values, in ns",
+     "fRawHits.HYPDCHit.GetRefCorrTime()"},
+    {"refcortime", "Raw time with reference time subtracted Values, in ns",
+     "fHits.HYPDCHit.GetRefCorrTime()"},
+    {"time","Drift time",
      "fHits.HYPDCHit.GetTime()"},
-    {"dist","Drift distancess",
+     {"dist","Drift distancess",
      "fHits.HYPDCHit.GetDist()"},
     {"pos"," Wire pos",
      "fHits.HYPDCHit.GetPos()"},
     {"nhit", "Number of hits", "GetNHits()"},
-    {"RefTime", "TDC reference time", "fTdcRefTime"},
+    {"RefTime", "Reference time in ns", "fTdcRefTime"},
     { nullptr }
   };
 
@@ -311,21 +313,16 @@ Int_t HYPDCPlane::ProcessHits(TClonesArray* rawhits, Int_t nexthit)
     for(UInt_t mhit=0; mhit<hit->GetRawTdcHit().GetNHits(); mhit++) {
       fNRawhits++;
       /* Sort into early, late and ontime */
-      Int_t rawnorefcorrtdc = hit->GetRawTdcHit().GetTimeRaw(mhit); // rawtime
-      Int_t rawtdc = hit->GetRawTdcHit().GetTime(mhit); // Get the ref time subtracted time
-      Double_t time = - rawtdc*fNSperChan + fPlaneTimeZero - wire->GetTOffset(); // fNSperChan > 0 for 1877
-      new( (*fRawHits)[nextRawHit++] ) HYPDCHit(wire, rawnorefcorrtdc,rawtdc, time, this);	
-      //cout << "fNSperChan, fPlaneTimeZero, Offset: " << fNSperChan << " " << fPlaneTimeZero << " " << wire->GetTOffset() << " " << time << endl;
-      //cout << "Rawtdc, TdcMin, TdcMax: " << rawtdc << " " << fTdcWinMin << " " << fTdcWinMax << endl;
-     if(rawtdc < fTdcWinMin) {
-	  // Increment early counter  (Actually late because TDC is backward)
-      } else if (rawtdc > fTdcWinMax) {
-  	// Increment late count
-      } else {
-	if (First_Hit_In_Window) {
-	new( (*fFirstPassHits)[nextHit++] ) HYPDCHit(wire, rawnorefcorrtdc,rawtdc, time, this);
-	First_Hit_In_Window = kFALSE;
-	}
+      Int_t rawtime = hit->GetRawTdcHit().GetTimeRaw(mhit); // rawtime in ns
+      Int_t refcortime = hit->GetRawTdcHit().GetTime(mhit); // ref time subtracted time
+      Double_t time = refcortime; // FIXME: add time offset and other corr as needed
+      //Double_t time = - rawtdc*fNSperChan + fPlaneTimeZero - wire->GetTOffset(); // fNSperChan > 0 for 1877
+      new( (*fRawHits)[nextRawHit++] ) HYPDCHit(wire, rawtime, refcortime, time, this);	
+      if(rawtime >= fTdcWinMin && rawtime <= fTdcWinMax) {
+      	if (First_Hit_In_Window) {
+	        new( (*fFirstPassHits)[nextHit++] ) HYPDCHit(wire, rawtime, refcortime, time, this);
+	        First_Hit_In_Window = kFALSE;
+	      }
       }
     }
     ihit++;
@@ -345,12 +342,12 @@ Int_t HYPDCPlane::SubtractStartTime()
     HYPDCHit *thishit = (HYPDCHit*) fFirstPassHits->At(ihit);
     Double_t temptime= thishit->GetTime()-StartTime;
     Int_t tempRawtime= thishit->GetRawTime();
-    Int_t tempRawNoRefCorrtime= thishit->GetRawNoRefCorrTime();
+    Int_t tempRefCorrtime= thishit->GetRefCorrTime();
     THcDCWire *tempWire = (THcDCWire*) thishit->GetWire();
     thishit->SetTime(temptime);
     thishit->ConvertTimeToDist();
     if (temptime > fMin_DriftTime && temptime <fMax_DriftTime) {
-	    new( (*fHits)[nextHit++] ) HYPDCHit(tempWire, tempRawNoRefCorrtime, tempRawtime, temptime, this);
+	    new( (*fHits)[nextHit++] ) HYPDCHit(tempWire, tempRawtime, tempRefCorrtime, temptime, this);
     }
 
   }

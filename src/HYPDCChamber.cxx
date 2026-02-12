@@ -253,6 +253,7 @@ Int_t HYPDCChamber::DefineVariables( EMode mode )
     { "stub_xp", "", "fSpacePoints.HYPSpacePoint.GetStubXP()" },
     { "stub_y", "", "fSpacePoints.HYPSpacePoint.GetStubY()" },
     { "stub_yp", "", "fSpacePoints.HYPSpacePoint.GetStubYP()" },
+    { "stub_chi2", "", "fSpacePoints.HYPSpacePoint.GetChi2()" },  
     { "ncombos", "", "fSpacePoints.HYPSpacePoint.GetCombos()" },
     { "U_pos", "", "fUClusters.HYPDCCluster.GetX()" },
     { "X_pos", "", "fXClusters.HYPDCCluster.GetX()" },
@@ -385,7 +386,7 @@ Int_t HYPDCChamber::FindSpacePoints()
 
   Int_t nvxclus = 0;
   for(Int_t iv = 0; iv < nvclus; iv++) {
-    HYPDCCluster *vclus = static_cast<HYPDCCluster*>(fUClusters->At(iv));
+    HYPDCCluster *vclus = static_cast<HYPDCCluster*>(fVClusters->At(iv));
     Double_t vpos = vclus->GetX();
     HYPDCHit* vhit = vclus->GetHit(0);
     HYPDCPlane* vplane = vhit->GetWirePlane();
@@ -715,6 +716,7 @@ void HYPDCChamber::LeftRight()
 
       } else {
 	      if (fhdebugflagpr) cout << "Insufficient planes hit in HYPDCChamber::LeftRight()" << bitpat <<endl;
+        // do nothing
       }
     } // End loop of pm combinations
 
@@ -755,6 +757,7 @@ void HYPDCChamber::LeftRight()
       sp->SetStub(stub);
       if (fhdebugflagpr) cout << " Left/Right space pt " << isp+1 << " " << stub[0]<< " " << stub[1] << " " << stub[2]<< " " << stub[3] << endl;
     }
+    sp->SetChi2(minchi2);
   }// space point loop
 
 }

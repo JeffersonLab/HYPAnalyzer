@@ -8,9 +8,9 @@
 class HYPDCHit : public TObject {
 
 public:
-  HYPDCHit(THcDCWire* wire=NULL, Int_t rawnorefcorrtime=0, Int_t rawtime=0, Double_t time=0.0, 
+  HYPDCHit(THcDCWire* wire=NULL, Int_t rawtime=0, Int_t refcorrtime = 0, Double_t time=0.0, 
     HYPDCPlane* wp=0) :
-    fWire(wire), fRawNoRefCorrTime(rawnorefcorrtime), fRawTime(rawtime), fTime(time), fWirePlane(wp),
+    fWire(wire), fRawTime(rawtime), fRefCorrTime(), fTime(time), fWirePlane(wp),
       fDist(0.0), fLR(0), ftrDist(kBig),fNPlaneCluster(0) {
       if (wire) ConvertTimeToDist();
       fCorrected = 0;
@@ -26,8 +26,8 @@ public:
   THcDCWire* GetWire() const { return fWire; }
   Double_t GetWireSigma() const { return fWire->GetSigma(); }
   Int_t    GetWireNum() const { return fWire->GetNum(); }
-  Int_t    GetRawTime() const { return fRawTime; }
-  Int_t    GetRawNoRefCorrTime() const { return fRawNoRefCorrTime; }
+  Int_t    GetRawTime() const { return fRawTime; } // no ref corrected time
+  Int_t    GetRefCorrTime() const { return fRefCorrTime; } // reference time subtracted
   Double_t GetTime()    const { return fTime; }
   Double_t GetDist()    const { return fDist; }
   Double_t GetPos()     const { return fWire->GetPos(); } //Position of hit wire
@@ -58,9 +58,9 @@ protected:
   static const Double_t kBig;  //!
 
   THcDCWire*  fWire;     // Wire on which the hit occurred
-  Int_t       fRawNoRefCorrTime;  // raw TDC value (channels) 
-  Int_t       fRawTime;  // TDC value (channels) reference time subtracted
-  Double_t    fTime;     // Time corrected for time offset of wire (s)
+  Int_t       fRawTime;  // Time with trigger time subtracted
+  Int_t       fRefCorrTime; // Rerence time corrected time
+  Double_t    fTime;       // Time corrected for time offset of wire (s)
   HYPDCPlane* fWirePlane; //! Pointer to parent wire plane
   Double_t    fDist;     // (Perpendicular) Drift Distance
   Int_t       fLR;       // +1/-1 which side of wire

@@ -551,7 +551,7 @@ Int_t HYPDC::CoarseTrack( TClonesArray& tracks )
      into the tracks TClonesArray.
      Tracks are in the detector coordinate system.
   */
-
+  
   // Subtract starttimes from each plane hit
   for(Int_t ip = 0; ip < fNPlanes; ip++) {
     fPlanes[ip]->SubtractStartTime();
@@ -648,7 +648,7 @@ void HYPDC::LinkStubs()
                        stubs.
   */
 
-  cout << "HYPDC::LinkStubs" << endl;
+  // cout << "HYPDC::LinkStubs" << endl;
   std::vector<HYPSpacePoint*> fSp;
   fNSp=0;
   fSp.clear();
