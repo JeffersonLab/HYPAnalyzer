@@ -54,6 +54,8 @@ HYPCherenkov::~HYPCherenkov()
 THaAnalysisObject::EStatus HYPCherenkov::Init(const TDatime &date)
 {
 
+  //  cout << "HYPCherenkov::Init" << endl;
+
   string EngineDID = string(GetApparatus()->GetName()).substr(0, 1) + GetName();
   std::transform(EngineDID.begin(), EngineDID.end(), EngineDID.begin(), ::toupper);
   if(gHcDetectorMap->FillMap(fDetMap, EngineDID.c_str()) < 0) {
@@ -98,6 +100,8 @@ void HYPCherenkov::Clear( Option_t* opt )
 //_____________________________________________________________________
 Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
 {
+  //  cout << "HYPCherenkov::ReadDatabase" << endl;
+
   string prefix = string(GetApparatus()->GetName()).substr(0, 1) + GetName();
   std::transform(prefix.begin(), prefix.end(), prefix.begin(), ::tolower);
 
@@ -122,6 +126,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
   };
 
   // Default values
+  fADC_RefTimeCut = 0;
   fSampThreshold = 5.;
   fSampNSA = 0;   // use value stored in event 125 info
   fSampNSB = 0;   // use value stored in event 125 info
@@ -194,6 +199,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
   if(fPresentP) {		      // if this spectrometer not part of trigger
     present = *fPresentP;
   }
+
   fNhits = DecodeToHitList(evdata, !present);
 
   // FIXME: Define a function to store data and call it for pos/neg
