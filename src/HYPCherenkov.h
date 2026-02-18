@@ -48,17 +48,19 @@ class HYPCherenkov : public THaNonTrackingDetector, THcHitList {
   class FADCHitData {
     public:
     FADCHitData() : paddle(0), Ped(0), PulseInt(0), PulseAmp(0),
-    PulseTime(0) {}
+		    PulseTime(0), Is_good_hit(0) {}
 
     void clear() {
       paddle = 0;
       Ped = PulseInt = PulseAmp = PulseTime = 0.0;
+      Is_good_hit = 0;
     }
     Int_t  paddle;
     Data_t Ped;
     Data_t PulseInt;
     Data_t PulseAmp;
     Data_t PulseTime;
+    Int_t  Is_good_hit;
   };
 
   vector<FADCHitData> fPosDataRaw;

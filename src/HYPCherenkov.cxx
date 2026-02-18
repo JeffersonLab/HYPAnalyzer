@@ -132,7 +132,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
   fSampNSB = 0;   // use value stored in event 125 info
   fSampNSAT = 2;  // default value in THcRawHit::SetF250Params
   fUseSampWaveform = 0; // 0= do not use , 1 = use Sample Waveform
-  fDebugAdc = 0;
+  fDebugAdc = 0;  // Save raw adc variables, default = 0
 
   gHcParms->LoadParmValues((DBRequest*)&list, prefix.c_str());
 
@@ -210,32 +210,32 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
     THcRawAdcHit&    rawPosAdcHit = hit->GetRawAdcHitPos();
     THcRawAdcHit&    rawNegAdcHit = hit->GetRawAdcHitNeg();
 
-    Int_t errorflag = 999;
+    Int_t errorflag = -1;
     if ( fUseSampWaveform == 0 ) {
       for (UInt_t thit = 0; thit < rawPosAdcHit.GetNPulses(); thit++) {
+	FADCHitData posdata_raw;
+	FADCHitData posdata;
 
-      FADCHitData posdata_raw;
-      FADCHitData posdata;
-
-      posdata_raw.paddle = npmt;
-      posdata_raw.Ped = rawPosAdcHit.GetPedRaw();
-      posdata_raw.PulseInt = rawPosAdcHit.GetPulseIntRaw();
-      posdata_raw.PulseAmp = rawPosAdcHit.GetPulseAmpRaw();
-      posdata_raw.PulseTime = rawPosAdcHit.GetPulseTimeRaw();
+	posdata_raw.paddle = npmt;
+	posdata_raw.Ped = rawPosAdcHit.GetPedRaw();
+	posdata_raw.PulseInt = rawPosAdcHit.GetPulseIntRaw(thit);
+	posdata_raw.PulseAmp = rawPosAdcHit.GetPulseAmpRaw(thit);
+	posdata_raw.PulseTime = rawPosAdcHit.GetPulseTimeRaw(thit);
        
-      posdata.paddle = npmt;
-      posdata.Ped = rawPosAdcHit.GetPed();
-      posdata.PulseInt = rawPosAdcHit.GetPulseInt();
-      posdata.PulseAmp = rawPosAdcHit.GetPulseAmp();
-      posdata.PulseTime = rawPosAdcHit.GetPulseTime();
+	posdata.paddle = npmt;
+	posdata.Ped = rawPosAdcHit.GetPed();
+	posdata.PulseInt = rawPosAdcHit.GetPulseInt(thit);
+	posdata.PulseAmp = rawPosAdcHit.GetPulseAmp(thit);
+	posdata.PulseTime = rawPosAdcHit.GetPulseTime(thit);
 
-      if(posdata_raw.PulseAmp > 0)  errorflag = 0;
-      if(posdata_raw.PulseAmp <= 0) errorflag = 1;
-      if(posdata_raw.PulseAmp <= 0 && rawPosAdcHit.GetNSamples() > 0) errorflag = 2;
+	if(posdata_raw.PulseAmp > 0)  errorflag = 0;
+	if(posdata_raw.PulseAmp <= 0) errorflag = 1;
+	if(posdata_raw.PulseAmp <= 0 && rawPosAdcHit.GetNSamples() > 0) errorflag = 2;
 
-      fPosDataRaw.emplace_back(posdata_raw);
-      fPosData.emplace_back(posdata);
-      // FIXME: Add an option to use pedestal from DB
+	fPosDataRaw.emplace_back(posdata_raw);
+	fPosData.emplace_back(posdata);
+	fPosErrorFlag.emplace_back(errorflag);
+	// FIXME: Do we want to add an option to use pedestal from DB
       }
     }// Using Pulse Data
 
@@ -256,15 +256,15 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 
         possampdata_raw.paddle = npmt;
         possampdata_raw.Ped = rawPosAdcHit.GetSampPedRaw();
-        possampdata_raw.PulseInt = rawPosAdcHit.GetSampPulseIntRaw();
-        possampdata_raw.PulseAmp = rawPosAdcHit.GetSampPulseAmpRaw();
-        possampdata_raw.PulseTime = rawPosAdcHit.GetSampPulseTimeRaw();
+        possampdata_raw.PulseInt = rawPosAdcHit.GetSampPulseIntRaw(thit);
+        possampdata_raw.PulseAmp = rawPosAdcHit.GetSampPulseAmpRaw(thit);
+        possampdata_raw.PulseTime = rawPosAdcHit.GetSampPulseTimeRaw(thit);
         
         possampdata.paddle = npmt;
         possampdata.Ped = rawPosAdcHit.GetSampPed();
-        possampdata.PulseInt = rawPosAdcHit.GetSampPulseInt();
-        possampdata.PulseAmp = rawPosAdcHit.GetSampPulseAmp();
-        possampdata.PulseTime = rawPosAdcHit.GetSampPulseTime();
+        possampdata.PulseInt = rawPosAdcHit.GetSampPulseInt(thit);
+        possampdata.PulseAmp = rawPosAdcHit.GetSampPulseAmp(thit);
+        possampdata.PulseTime = rawPosAdcHit.GetSampPulseTime(thit);
 
         fPosSampDataRaw.emplace_back(possampdata_raw);
         fPosSampData.emplace_back(possampdata);
@@ -276,13 +276,13 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 
           fPosDataRaw.emplace_back(possampdata_raw);
           fPosData.emplace_back(possampdata);
+	  fPosErrorFlag.emplace_back(errorflag);
         }
       }// samp pulse loop
     }
-    fPosErrorFlag.emplace_back(errorflag);
 
     // Negative PMT
-    errorflag = 999;
+    errorflag = -1; // reset
     if ( fUseSampWaveform == 0 ) {
       for (UInt_t thit = 0; thit < rawNegAdcHit.GetNPulses(); thit++) {
 
@@ -291,15 +291,15 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 
       negdata_raw.paddle = npmt;
       negdata_raw.Ped = rawNegAdcHit.GetPedRaw();
-      negdata_raw.PulseInt = rawNegAdcHit.GetPulseIntRaw();
-      negdata_raw.PulseAmp = rawNegAdcHit.GetPulseAmpRaw();
-      negdata_raw.PulseTime = rawNegAdcHit.GetPulseTimeRaw();
+      negdata_raw.PulseInt = rawNegAdcHit.GetPulseIntRaw(thit);
+      negdata_raw.PulseAmp = rawNegAdcHit.GetPulseAmpRaw(thit);
+      negdata_raw.PulseTime = rawNegAdcHit.GetPulseTimeRaw(thit);
        
       negdata.paddle = npmt;
       negdata.Ped = rawNegAdcHit.GetPed();
-      negdata.PulseInt = rawNegAdcHit.GetPulseInt();
-      negdata.PulseAmp = rawNegAdcHit.GetPulseAmp();
-      negdata.PulseTime = rawNegAdcHit.GetPulseTime();
+      negdata.PulseInt = rawNegAdcHit.GetPulseInt(thit);
+      negdata.PulseAmp = rawNegAdcHit.GetPulseAmp(thit);
+      negdata.PulseTime = rawNegAdcHit.GetPulseTime(thit);
 
       if(negdata_raw.PulseAmp> 0) errorflag = 0;
       if(negdata_raw.PulseAmp <= 0) errorflag = 1;
@@ -307,7 +307,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 
       fNegDataRaw.emplace_back(negdata_raw);
       fNegData.emplace_back(negdata);
-      // FIXME: Add an option to use pedestal from DB
+      fNegErrorFlag.emplace_back(errorflag);
       }
     }
     if (rawNegAdcHit.GetNSamples() >0 ) {
@@ -318,7 +318,6 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
       if (fSampNSAT != 2) rawNegAdcHit.SetSampNSAT(fSampNSAT);
       rawNegAdcHit.SetSampIntTimePedestalPeak();
       
-      // FIXME: Do we want to save waveform data?
       for (UInt_t thit = 0; thit < rawNegAdcHit.GetNSampPulses(); thit++) {
 
         FADCHitData negsampdata_raw;
@@ -326,15 +325,15 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 
         negsampdata_raw.paddle = npmt;
         negsampdata_raw.Ped = rawNegAdcHit.GetSampPedRaw();
-        negsampdata_raw.PulseInt = rawNegAdcHit.GetSampPulseIntRaw();
-        negsampdata_raw.PulseAmp = rawNegAdcHit.GetSampPulseAmpRaw();
-        negsampdata_raw.PulseTime = rawNegAdcHit.GetSampPulseTimeRaw();
+        negsampdata_raw.PulseInt = rawNegAdcHit.GetSampPulseIntRaw(thit);
+        negsampdata_raw.PulseAmp = rawNegAdcHit.GetSampPulseAmpRaw(thit);
+        negsampdata_raw.PulseTime = rawNegAdcHit.GetSampPulseTimeRaw(thit);
         
         negsampdata.paddle = npmt;
         negsampdata.Ped = rawNegAdcHit.GetSampPed();
-        negsampdata.PulseInt = rawNegAdcHit.GetSampPulseInt();
-        negsampdata.PulseAmp = rawNegAdcHit.GetSampPulseAmp();
-        negsampdata.PulseTime = rawNegAdcHit.GetSampPulseTime();
+        negsampdata.PulseInt = rawNegAdcHit.GetSampPulseInt(thit);
+        negsampdata.PulseAmp = rawNegAdcHit.GetSampPulseAmp(thit);
+        negsampdata.PulseTime = rawNegAdcHit.GetSampPulseTime(thit);
 
         fNegSampDataRaw.emplace_back(negsampdata_raw);
         fNegSampData.emplace_back(negsampdata);
@@ -346,10 +345,11 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 
           fNegDataRaw.emplace_back(negsampdata_raw);
           fNegData.emplace_back(negsampdata);
+	  fNegErrorFlag.emplace_back(errorflag);
         }
       }// samp pulse loop
     }// Negative PMT
-    fNegErrorFlag.emplace_back(errorflag);
+
 
     ihit++;
   }// while
