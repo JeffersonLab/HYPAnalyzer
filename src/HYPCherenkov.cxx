@@ -42,12 +42,7 @@ HYPCherenkov::~HYPCherenkov()
   // Destructor
   RemoveVariables();
 
-  /*
-  delete [] fAdcPosTimeWindowMin; fAdcPosTimeWindowMin = nullptr;
-  delete [] fAdcPosTimeWindowMax; fAdcPosTimeWindowMax = nullptr;
-  delete [] fAdcNegTimeWindowMin; fAdcNegTimeWindowMin = nullptr;
-  delete [] fAdcNegTimeWindowMax; fAdcNegTimeWindowMax = nullptr;
-  */
+  DeleteArrays();
 }
 
 //__________________________________________________________________
@@ -95,6 +90,24 @@ void HYPCherenkov::Clear( Option_t* opt )
 
   fPosErrorFlag.clear();
   fNegErrorFlag.clear();
+
+  fPosDataGood.clear();
+  fNegDataGood.clear();
+
+  fPosNpeSum = 0.;
+  fNegNpeSum = 0.;
+  fNpeSum = 0.;
+}
+
+//_____________________________________________________________________
+void HYPCherenkov::DeleteArrays()
+{
+  delete [] fPosGain; fPosGain = nullptr;
+  delete [] fNegGain; fNegGain = nullptr;
+  delete [] fAdcPosTimeWindowMin; fAdcPosTimeWindowMin = nullptr; 
+  delete [] fAdcPosTimeWindowMax; fAdcPosTimeWindowMax = nullptr; 
+  delete [] fAdcNegTimeWindowMin; fAdcNegTimeWindowMin = nullptr; 
+  delete [] fAdcNegTimeWindowMax; fAdcNegTimeWindowMax = nullptr; 
 }
 
 //_____________________________________________________________________
@@ -111,8 +124,25 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
     {"_nelem", &fNelem, kInt},
     {nullptr}
   };
-
   gHcParms->LoadParmValues(list_1, prefix.c_str());
+
+  fPosGain = new Double_t[fNelem];
+  fNegGain = new Double_t[fNelem];
+
+  fAdcPosTimeWindowMin = new Double_t[fNelem];
+  fAdcPosTimeWindowMax = new Double_t[fNelem];
+  fAdcNegTimeWindowMin = new Double_t[fNelem];
+  fAdcNegTimeWindowMax = new Double_t[fNelem];
+
+  // Initialize variables
+  for(Int_t i = 0; i < fNelem; i++) {
+    fPosGain[i] = 1.0;    
+    fNegGain[i] = 1.0;    
+    fAdcPosTimeWindowMin[i] = -1000.;
+    fAdcPosTimeWindowMax[i] = 1000.;
+    fAdcNegTimeWindowMin[i] = -1000.;
+    fAdcNegTimeWindowMax[i] = 1000.;
+  }
 
   DBRequest list[]={
     {"_SampThreshold",     &fSampThreshold,   kDouble,0,1},
@@ -122,6 +152,12 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
     {"_UseSampWaveform",   &fUseSampWaveform, kInt,0,1},
     {"_adcrefcut",         &fADC_RefTimeCut,  kInt,0,1},
     {"_debug_adc",         &fDebugAdc,        kInt,0,1},
+    {"_adcPosTimeWindowMin", fAdcPosTimeWindowMin, kDouble, static_cast<UInt_t>(fNelem), 1},
+    {"_adcPosTimeWindowMax", fAdcPosTimeWindowMax, kDouble, static_cast<UInt_t>(fNelem), 1},
+    {"_adcNegTimeWindowMin", fAdcNegTimeWindowMin, kDouble, static_cast<UInt_t>(fNelem), 1},
+    {"_adcNegTimeWindowMin", fAdcNegTimeWindowMax, kDouble, static_cast<UInt_t>(fNelem), 1},
+    {"_pos_gain",            fPosGain, kDouble, static_cast<UInt_t>(fNelem), 1},
+    {"_neg_gain",            fNegGain, kDouble, static_cast<UInt_t>(fNelem), 1},
     {nullptr}
   };
 
@@ -156,7 +192,7 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
 
   if (fDebugAdc) {
     RVarDef vars[] = {
-      // FIXME; put the counters back
+      // FIXME; put the counters back?
       // {"numPosAdcHits",        "Number of Positive ADC Hits Per PMT",      "fNumPosAdcHits"},        // Aerogel occupancy
       // {"totNumPosAdcHits",     "Total Number of Positive ADC Hits",        "fTotNumPosAdcHits"},     // Aerogel multiplicity
       // {"numNegAdcHits",        "Number of Negative ADC Hits Per PMT",      "fNumNegAdcHits"},        // Aerogel occupancy
@@ -187,9 +223,22 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
     DefineVarsFromList( vars, mode);
   }
 
-  // return DefineVarsFromList(vars, mode);
-  return kOK;
+  RVarDef vars[] = {
+    {"posNpeSum",   "Total Number of Positive PEs", "fPosNpeSum"},
+    {"negNpeSum",   "Total Number of Negative PEs", "fNegNpeSum"},
+    {"npeSum",      "Total Number of PEs",          "fNpeSum"},
+    {"goodPosAdcPed",          "Good Positive ADC pedestals",            "fPosDataGood.Ped"},
+    {"goodPosAdcPulseInt",     "Good Positive ADC pulse integrals",      "fPosDataGood.PulseInt"},
+    {"goodPosAdcPulseAmp",     "Good Positive ADC pulse amplitudes",     "fPosDataGood.PulseAmp"},
+    {"goodPosAdcPulseTime",    "Good Positive ADC pulse times",          "fPosDataGood.PulseTime"},
+    {"goodNegAdcPed",          "Good Negative ADC pedestals",            "fNegDataGood.Ped"},
+    {"goodNegAdcPulseInt",     "Good Negative ADC pulse integrals",      "fNegDataGood.PulseInt"},
+    {"goodNegAdcPulseAmp",     "Good Negative ADC pulse amplitudes",     "fNegDataGood.PulseAmp"},
+    {"goodNegAdcPulseTime",    "Good Negative ADC pulse times",          "fNegDataGood.PulseTime"},
+    {nullptr}
+  };
 
+  return DefineVarsFromList(vars, mode);
 }
 
 //_____________________________________________________________________
@@ -359,8 +408,44 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 //_____________________________________________________________________
 Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
 {
-  // Do nothing here. 
-  // Reconstruction should be done in each derived class for AC and WC
+  
+  // FIXME: Add start time correction?
+  Double_t start_time = 0.0;
+
+  // Loop over pos adc hits
+  for(auto adchit : fPosData) {
+    Int_t ipmt = adchit.paddle;
+    Double_t timediff = start_time - adchit.PulseTime;
+
+    Bool_t pass_timecut = (timediff > fAdcPosTimeWindowMin[ipmt] && timediff < fAdcPosTimeWindowMax[ipmt]);
+    if(pass_timecut) {
+      // Calculate NPE
+      Double_t npe = fPosGain[ipmt] * adchit.PulseInt; // use pulse int or pulse amp?
+      fPosNpeSum += npe;
+
+      adchit.Is_good_hit = 1; // set good hit flag to true
+      fPosDataGood.emplace_back(adchit); // add to the good hit list
+    }
+  }  
+
+  // Loop over neg adc hits
+  for(auto adchit : fNegData) {
+    Int_t ipmt = adchit.paddle;
+    Double_t timediff = start_time - adchit.PulseTime;
+
+    Bool_t pass_timecut = (timediff > fAdcNegTimeWindowMin[ipmt] && timediff < fAdcNegTimeWindowMax[ipmt]);
+    if(pass_timecut) {
+      // Calculate NPE
+      Double_t npe = fNegGain[ipmt] * adchit.PulseInt; // use pulse int or pulse amp?
+      fNegNpeSum += npe;
+
+      adchit.Is_good_hit = 1; // set good hit flag to true
+      fNegDataGood.emplace_back(adchit); // add to the good hit list
+    }
+  }  
+
+  fNpeSum = fPosNpeSum + fNegNpeSum;
+
   return 0;
 
 }

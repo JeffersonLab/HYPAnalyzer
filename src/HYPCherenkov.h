@@ -39,10 +39,13 @@ class HYPCherenkov : public THaNonTrackingDetector, THcHitList {
   Int_t     fSampNSB;
   Int_t     fDebugAdc;
 
-  //Double_t  *fAdcPosTimeWindowMin;
-  //Double_t  *fAdcPosTimeWindowMax;
-  //Double_t  *fAdcNegTimeWindowMin;
-  //Double_t  *fAdcNegTimeWindowMax;
+  Double_t  *fAdcPosTimeWindowMin;
+  Double_t  *fAdcPosTimeWindowMax;
+  Double_t  *fAdcNegTimeWindowMin;
+  Double_t  *fAdcNegTimeWindowMax;
+
+  Double_t  *fPosGain;
+  Double_t  *fNegGain;
 
   // FIXME: make it more generic for other detectors too
   class FADCHitData {
@@ -63,6 +66,7 @@ class HYPCherenkov : public THaNonTrackingDetector, THcHitList {
     Int_t  Is_good_hit;
   };
 
+  // Raw data containers
   vector<FADCHitData> fPosDataRaw;
   vector<FADCHitData> fNegDataRaw;
   vector<FADCHitData> fPosData;
@@ -76,8 +80,20 @@ class HYPCherenkov : public THaNonTrackingDetector, THcHitList {
   vector<Int_t> fPosErrorFlag;
   vector<Int_t> fNegErrorFlag;
 
+  // Npe variables
+  Double_t fPosNpeSum;
+  Double_t fNegNpeSum;
+  Double_t fNpeSum;
+
+  // Save pulse data that passed the cuts
+  vector<FADCHitData> fPosDataGood;
+  vector<FADCHitData> fNegDataGood;
+
+  
   virtual Int_t ReadDatabase( const TDatime& date );
   virtual Int_t DefineVariables( EMode mode = kDefine );
+
+  void DeleteArrays();
 
   ClassDef(HYPCherenkov,0)
 
