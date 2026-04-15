@@ -20,7 +20,7 @@
 #define MAX_NUMBER_PAIRS 1000
 //____________________________________________________
 HYPDCChamber::HYPDCChamber( const char* name, const char* description, 
-  Int_t chambernum, THaDetectorBase* parent) :
+			    Int_t chambernum, THaDetectorBase* parent) :
   THaSubDetector(name, description, parent),
   fNPlanes(0), fNHits(0), fChamberNum(chambernum), fNSpacePoints(0)
 {
@@ -221,7 +221,7 @@ Int_t HYPDCChamber::ReadDatabase( const TDatime& date )
             }
           }
           AA3[j][i] = AA3[i][j];
-	      }
+	}
       }
       Int_t bitpat = allplanes & ~(1<<ipm1) & ~(1<<ipm2);
       // Should check that it is invertable
@@ -311,10 +311,10 @@ Int_t HYPDCChamber::FindSpacePoints()
           HYPDCCluster* clus = nullptr;
           if(hit1->GetAxis() == DC::kU){
             clus = (HYPDCCluster*)fUClusters->ConstructedAt(nuclus++);
-	        }
+	  }
           else if(hit1->GetAxis() == DC::kV){
             clus = (HYPDCCluster*)fVClusters->ConstructedAt(nvclus++);
-	        }
+	  }
           else {
             clus = (HYPDCCluster*)fXClusters->ConstructedAt(nxclus++);
       	  }
@@ -324,27 +324,27 @@ Int_t HYPDCChamber::FindSpacePoints()
           
           hit1->IncrNPlaneClust();
           hit2->IncrNPlaneClust();
-	      }
+	}
       } // hit2
       
       // single plane cluster
       if(hit1->GetNPlaneClust() == 0) {
-          Double_t x = hit1->GetPos();
-          Double_t y = 0.0;
+	Double_t x = hit1->GetPos();
+	Double_t y = 0.0;
 
-          HYPDCCluster* clus;
-          if(hit1->GetAxis() == DC::kU){
-            clus = (HYPDCCluster*)fUClusters->ConstructedAt(nuclus++);
-      	  }
-          else if(hit1->GetAxis() == DC::kV){
-            clus = (HYPDCCluster*)fVClusters->ConstructedAt(nvclus++);
-	        }
-          else {
-            clus = (HYPDCCluster*)fXClusters->ConstructedAt(nxclus++);
-	        }
-          clus->AddHit(hit1);
-          clus->SetXY(x,y);
-          hit1->IncrNPlaneClust();
+	HYPDCCluster* clus;
+	if(hit1->GetAxis() == DC::kU){
+	  clus = (HYPDCCluster*)fUClusters->ConstructedAt(nuclus++);
+	}
+	else if(hit1->GetAxis() == DC::kV){
+	  clus = (HYPDCCluster*)fVClusters->ConstructedAt(nvclus++);
+	}
+	else {
+	  clus = (HYPDCCluster*)fXClusters->ConstructedAt(nxclus++);
+	}
+	clus->AddHit(hit1);
+	clus->SetXY(x,y);
+	hit1->IncrNPlaneClust();
       }
     } // hit1
   }
@@ -366,20 +366,20 @@ Int_t HYPDCChamber::FindSpacePoints()
       HYPDCPlane* xplane = xhit->GetWirePlane();
 
       // calculate pos
-  	  Double_t determinate = uplane->GetXsp() * xplane->GetYsp() - uplane->GetYsp() * xplane->GetXsp();
-  	  Double_t x = (upos*xplane->GetYsp()- xpos*uplane->GetYsp())/determinate;
-	    Double_t y = (xpos*uplane->GetXsp()- upos*xplane->GetXsp())/determinate;
+      Double_t determinate = uplane->GetXsp() * xplane->GetYsp() - uplane->GetYsp() * xplane->GetXsp();
+      Double_t x = (upos*xplane->GetYsp()- xpos*uplane->GetYsp())/determinate;
+      Double_t y = (xpos*uplane->GetXsp()- upos*xplane->GetXsp())/determinate;
 
       HYPDCCluster* clus = (HYPDCCluster*)fUXClusters->ConstructedAt(nuxclus++);
 
       for (Int_t ih=0;ih<uclus->GetNHits();ih++) {
-	      HYPDCHit* temphit = uclus->GetHit(ih);
-	      clus->AddHit(temphit);
-	    }
-	    for (Int_t ih=0;ih<xclus->GetNHits();ih++) {
-	      HYPDCHit* temphit = xclus->GetHit(ih);
-	      clus->AddHit(temphit);
-	    }
+	HYPDCHit* temphit = uclus->GetHit(ih);
+	clus->AddHit(temphit);
+      }
+      for (Int_t ih=0;ih<xclus->GetNHits();ih++) {
+	HYPDCHit* temphit = xclus->GetHit(ih);
+	clus->AddHit(temphit);
+      }
       clus->SetXY(x,y);
     }
   }
@@ -399,20 +399,20 @@ Int_t HYPDCChamber::FindSpacePoints()
       HYPDCPlane* xplane = xhit->GetWirePlane();
 
       // calculate pos
-  	  Double_t determinate = vplane->GetXsp() * xplane->GetYsp() - vplane->GetYsp() * xplane->GetXsp();
-  	  Double_t x = (vpos*xplane->GetYsp()- xpos*vplane->GetYsp())/determinate;
-	    Double_t y = (xpos*vplane->GetXsp()- vpos*xplane->GetXsp())/determinate;
+      Double_t determinate = vplane->GetXsp() * xplane->GetYsp() - vplane->GetYsp() * xplane->GetXsp();
+      Double_t x = (vpos*xplane->GetYsp()- xpos*vplane->GetYsp())/determinate;
+      Double_t y = (xpos*vplane->GetXsp()- vpos*xplane->GetXsp())/determinate;
       
       HYPDCCluster* clus = (HYPDCCluster*)fVXClusters->ConstructedAt(nvxclus++);
 
       for (Int_t ih=0;ih<vclus->GetNHits();ih++) {
-	      HYPDCHit* temphit = vclus->GetHit(ih);
-	      clus->AddHit(temphit);
-	    }
-	    for (Int_t ih=0;ih<xclus->GetNHits();ih++) {
-	      HYPDCHit* temphit = xclus->GetHit(ih);
-	      clus->AddHit(temphit);
-	    }
+	HYPDCHit* temphit = vclus->GetHit(ih);
+	clus->AddHit(temphit);
+      }
+      for (Int_t ih=0;ih<xclus->GetNHits();ih++) {
+	HYPDCHit* temphit = xclus->GetHit(ih);
+	clus->AddHit(temphit);
+      }
       clus->SetXY(x,y);
     }
   }
@@ -430,9 +430,9 @@ Int_t HYPDCChamber::FindSpacePoints()
 
     // Get U, X hits from the UX clusters
     for (Int_t ih = 0; ih < uxclus->GetNHits(); ih++) {
-	     HYPDCHit* hit1 = uxclus->GetHit(ih);
-       if( hit1->GetAxis() == DC::kU ) UX_uHits.push_back(hit1);
-       if( hit1->GetAxis() == DC::kX ) UX_xHits.push_back(hit1);
+      HYPDCHit* hit1 = uxclus->GetHit(ih);
+      if( hit1->GetAxis() == DC::kU ) UX_uHits.push_back(hit1);
+      if( hit1->GetAxis() == DC::kX ) UX_xHits.push_back(hit1);
     }
 
     for(Int_t j = 0; j < nvxclus; j++) {
@@ -447,23 +447,23 @@ Int_t HYPDCChamber::FindSpacePoints()
         if( hit1->GetAxis() == DC::kX ) VX_xHits.push_back(hit1);
       }
 
-	    // Check ux and vx clusters have common x hits
+      // Check ux and vx clusters have common x hits
       Bool_t Xhits_match = kFALSE;
       if (VX_xHits.size() == UX_xHits.size() && UX_xHits.size()==1) {
-	      if (VX_xHits[0] == UX_xHits[0]) Xhits_match = kTRUE;
-	    } else if (VX_xHits.size() == UX_xHits.size() && UX_xHits.size()==2) {
-	      if (VX_xHits[0] == UX_xHits[0] && VX_xHits[1] == UX_xHits[1])  Xhits_match = kTRUE;
-	      if (VX_xHits[0] == UX_xHits[1] && VX_xHits[1] == UX_xHits[0])  Xhits_match = kTRUE;
-   	  }
+	if (VX_xHits[0] == UX_xHits[0]) Xhits_match = kTRUE;
+      } else if (VX_xHits.size() == UX_xHits.size() && UX_xHits.size()==2) {
+	if (VX_xHits[0] == UX_xHits[0] && VX_xHits[1] == UX_xHits[1])  Xhits_match = kTRUE;
+	if (VX_xHits[0] == UX_xHits[1] && VX_xHits[1] == UX_xHits[0])  Xhits_match = kTRUE;
+      }
 
       // Calculate distance between ux and vx clusters
       Double_t dist2 = pow(pos_x1-pos_x2,2) + pow(pos_y1-pos_y2,2);
 
       // Total number of hits for the cluster
-  	  Int_t TotHits = UX_uHits.size()+UX_xHits.size()+VX_vHits.size();
+      Int_t TotHits = UX_uHits.size()+UX_xHits.size()+VX_vHits.size();
 
       // Save spacepoints if passed cuts
-    	if (dist2 <= fSpacePointCriterion && Xhits_match && TotHits >= fMinHits) {
+      if (dist2 <= fSpacePointCriterion && Xhits_match && TotHits >= fMinHits) {
         HYPSpacePoint* sp = (HYPSpacePoint*)fSpacePoints->ConstructedAt(fNSpacePoints++);
         sp->Clear();
         
@@ -495,15 +495,15 @@ Int_t HYPDCChamber::FindSpacePoints()
 void HYPDCChamber::CorrectHitTimes()
 {
   /**
-   Use the rough hit positions in the chambers to correct the drift time
-   for hits in the space points.
+     Use the rough hit positions in the chambers to correct the drift time
+     for hits in the space points.
 
-   Assume all wires for a plane are read out on the same side (l/r or t/b).
-   If the wire is closer to horizontal, read out left/right.  If nearer
-   vertical, assume top/bottom.  (Note, this is not always true for the
-   SOS u and v planes.  They have 1 card each on the side, but the overall
-   time offset per card will cancel much of the error caused by this.  The
-   alternative is to check by card, rather than by plane and this is harder.
+     Assume all wires for a plane are read out on the same side (l/r or t/b).
+     If the wire is closer to horizontal, read out left/right.  If nearer
+     vertical, assume top/bottom.  (Note, this is not always true for the
+     SOS u and v planes.  They have 1 card each on the side, but the overall
+     time offset per card will cancel much of the error caused by this.  The
+     alternative is to check by card, rather than by plane and this is harder.
   */
 
   for(Int_t isp = 0; isp < fNSpacePoints; isp++) {
@@ -558,9 +558,9 @@ void HYPDCChamber::CorrectHitTimes()
         wireDistance = 0.0;
       }
 
-	    Double_t timeCorrection = wireDistance/fWireVelocity;
+      Double_t timeCorrection = wireDistance/fWireVelocity;
 
-	    // New behavior: Save corrected distance with the hit in the space point
+      // New behavior: Save corrected distance with the hit in the space point
       // so that the same hit can have a different correction depending on
       // which space point it is in.
       //
@@ -570,15 +570,15 @@ void HYPDCChamber::CorrectHitTimes()
       // but does not modify the hit data.
       // FIXME -- Implement as it is, but yeah gotta fix this
 
-        Double_t time=hit->GetTime();
-        Double_t dist=hit->GetDist();
+      Double_t time=hit->GetTime();
+      Double_t dist=hit->GetDist();
 
-        hit->SetTime(time - timeCorrection);
-        hit->ConvertTimeToDist();
-        sp->SetHitDist(ihit, hit->GetDist());
+      hit->SetTime(time - timeCorrection);
+      hit->ConvertTimeToDist();
+      sp->SetHitDist(ihit, hit->GetDist());
 
-        hit->SetTime(time);	// Restore time
-        hit->SetDist(dist);	// Restore distance
+      hit->SetTime(time);	// Restore time
+      hit->SetDist(dist);	// Restore distance
 
     }// Loop over hits for the given space point
   }// spacepoint loop
@@ -629,7 +629,7 @@ void HYPDCChamber::LeftRight()
     nplusminus = 1<<nhits;
 
     if(fSmallAngleApprox !=0) {
-    	Int_t npaired = 0;
+      Int_t npaired = 0;
       for(Int_t ihit1 = 0; ihit1 < nhits; ihit1++) {
         HYPDCHit* hit1 = sp->GetHit(ihit1);
         Int_t pindex1 = hit1->GetPlaneIndex();
@@ -637,19 +637,19 @@ void HYPDCChamber::LeftRight()
           for(Int_t ihit2 = 0; ihit2 < nhits; ihit2++) {
             HYPDCHit* hit2 = sp->GetHit(ihit2);
             if(hit2->GetPlaneIndex()-pindex1 == 1 && TMath::Abs(hit2->GetPos()-hit1->GetPos())<0.51) { // Adjacent plane
-            if(hit2->GetPos() <= hit1->GetPos() ) {
-              plusminusknown[ihit1] = -1;
-              plusminusknown[ihit2] = 1;
-            } else {
-              plusminusknown[ihit1] = 1;
-              plusminusknown[ihit2] = -1;
-            }
-            npaired+=2;
+	      if(hit2->GetPos() <= hit1->GetPos() ) {
+		plusminusknown[ihit1] = -1;
+		plusminusknown[ihit2] = 1;
+	      } else {
+		plusminusknown[ihit1] = 1;
+		plusminusknown[ihit2] = -1;
+	      }
+	      npaired+=2;
             }
           }// hit2 loop
-	      }
+	}
       }// hit1 loop
-	    nplusminus = 1 << (nhits-npaired);
+      nplusminus = 1 << (nhits-npaired);
     }// no small angle approx
 
     Int_t nplaneshit = Count1Bits(bitpat);
@@ -660,62 +660,62 @@ void HYPDCChamber::LeftRight()
       Int_t iswhit = 1;
       for(Int_t ihit = 0; ihit < nhits; ihit++) {
       	if(plusminusknown[ihit]!=0) {
-	        plusminus[ihit] = plusminusknown[ihit];
-	      } else {
-	        // Max hits per point has to be less than 32.
-	        if(pmloop & iswhit) {
-	          plusminus[ihit] = 1;
-	        } else {
-	          plusminus[ihit] = -1;
+	  plusminus[ihit] = plusminusknown[ihit];
+	} else {
+	  // Max hits per point has to be less than 32.
+	  if(pmloop & iswhit) {
+	    plusminus[ihit] = 1;
+	  } else {
+	    plusminus[ihit] = -1;
       	  }
-	        iswhit <<= 1;
-	      }
+	  iswhit <<= 1;
+	}
       }
       if ( nplaneshit >= fNPlanes-2 ) {
       	Double_t chi2;
-	      chi2 = FindStub(nhits, sp,plane_list, bitpat, plusminus, stub);
-	      if (fdebugstubchisq) cout << " pmloop = " << pmloop << " chi2 = " << chi2 << endl;
-	      if(chi2 < minchi2) {
-	        if (fStubMaxXPDiff < 100. ) {
+	chi2 = FindStub(nhits, sp,plane_list, bitpat, plusminus, stub);
+	if (fdebugstubchisq) cout << " pmloop = " << pmloop << " chi2 = " << chi2 << endl;
+	if(chi2 < minchi2) {
+	  if (fStubMaxXPDiff < 100. ) {
             // Take best chi2 IF x' of the stub agrees with x' as expected from x.
             // Sometimes an incorrect x' gives a good chi2 for the stub, even though it is
             // not the correct left/right combination for the real track.
             // Rotate x'(=stub(3)) to hut coordinates and compare to x' expected from x.
             // THIS ASSUMES STANDARD HMS TUNE!!!!, for which x' is approx. x/875.
             if(stub[2]*fTanBeta[plane_list[0]]==-1.0) {
-	            if (fhdebugflagpr) cout << "HYPDCChamber::LeftRight() Error 3" << endl;
+	      if (fhdebugflagpr) cout << "HYPDCChamber::LeftRight() Error 3" << endl;
       	    }
-	          Double_t xp_fit = stub[2]-fTanBeta[plane_list[0]] / (1+stub[2]*fTanBeta[plane_list[0]]);
+	    Double_t xp_fit = stub[2]-fTanBeta[plane_list[0]] / (1+stub[2]*fTanBeta[plane_list[0]]);
       	    Double_t xp_expect = sp->GetX() * fRatio_xpfp_to_xfp;
-	          if(TMath::Abs(xp_fit-xp_expect)<fStubMaxXPDiff) {
-	            minchi2 = chi2;
-	            for(Int_t ihit=0;ihit<nhits;ihit++) {
-		            plusminusbest[ihit] = plusminus[ihit];
-	            }
+	    if(TMath::Abs(xp_fit-xp_expect)<fStubMaxXPDiff) {
+	      minchi2 = chi2;
+	      for(Int_t ihit=0;ihit<nhits;ihit++) {
+		plusminusbest[ihit] = plusminus[ihit];
+	      }
               sp->SetStub(stub);
-	          } else {		// Record best stub failing angle cut
+	    } else {		// Record best stub failing angle cut
               if (chi2 < tmp_minchi2) {
-		            tmp_minchi2 = chi2;
-		            for(Int_t ihit = 0; ihit < nhits; ihit++) {
-		              tmp_plusminus[ihit] = plusminus[ihit];
-		            }
-		            for(Int_t i = 0; i < 4; i++) {
-            		  tmp_stub[i] = stub[i];
-		            }
-	            }
+		tmp_minchi2 = chi2;
+		for(Int_t ihit = 0; ihit < nhits; ihit++) {
+		  tmp_plusminus[ihit] = plusminus[ihit];
+		}
+		for(Int_t i = 0; i < 4; i++) {
+		  tmp_stub[i] = stub[i];
+		}
+	      }
       	    }
-	        } else { // Not HMS specific
-	          minchi2 = chi2;
-	          for(Int_t ihit=0;ihit<nhits;ihit++) {
-	            plusminusbest[ihit] = plusminus[ihit];
-	          }
+	  } else { // Not HMS specific
+	    minchi2 = chi2;
+	    for(Int_t ihit=0;ihit<nhits;ihit++) {
+	      plusminusbest[ihit] = plusminus[ihit];
+	    }
             sp->SetStub(stub);
-	        }
+	  }
       	} 
 
 
       } else {
-	      if (fhdebugflagpr) cout << "Insufficient planes hit in HYPDCChamber::LeftRight()" << bitpat <<endl;
+	if (fhdebugflagpr) cout << "Insufficient planes hit in HYPDCChamber::LeftRight()" << bitpat <<endl;
         // do nothing
       }
     } // End loop of pm combinations
@@ -724,11 +724,11 @@ void HYPDCChamber::LeftRight()
       // do nothing
     } else {
       if(minchi2 == maxchi2 ) {	// No track passed angle cut
-	      minchi2 = tmp_minchi2;
-	      for(Int_t ihit=0;ihit<nhits;ihit++) {
-	        plusminusbest[ihit] = tmp_plusminus[ihit];
-	      }
-	      sp->SetStub(tmp_stub);
+	minchi2 = tmp_minchi2;
+	for(Int_t ihit=0;ihit<nhits;ihit++) {
+	  plusminusbest[ihit] = tmp_plusminus[ihit];
+	}
+	sp->SetStub(tmp_stub);
       }
       Double_t *spstub = sp->GetStubP();
 
@@ -745,11 +745,11 @@ void HYPDCChamber::LeftRight()
       // (I think this rotates in case chambers not perpendicular to central ray)
       Int_t pindex=plane_list[0];
       if(spstub[2] - fTanBeta[pindex] == -1.0) {
-	      if (fhdebugflagpr) cout << "HYPDCChamber::LeftRight(): stub3 error" << endl;
+	if (fhdebugflagpr) cout << "HYPDCChamber::LeftRight(): stub3 error" << endl;
       }
       stub[2] = (spstub[2] - fTanBeta[pindex]) / (1.0 + spstub[2]*fTanBeta[pindex]);
       if(spstub[2]*fSinBeta[pindex] ==  -fCosBeta[pindex]) {
-	      if (fhdebugflagpr) cout << "HYPDCChamber::LeftRight(): stub4 error" << endl;
+	if (fhdebugflagpr) cout << "HYPDCChamber::LeftRight(): stub4 error" << endl;
       }
       stub[3] = spstub[3] / (spstub[2]*fSinBeta[pindex]+fCosBeta[pindex]);
       stub[0] = spstub[0]*fCosBeta[pindex] - spstub[0]*stub[2]*fSinBeta[pindex];
@@ -773,10 +773,10 @@ UInt_t HYPDCChamber::Count1Bits(UInt_t x)
 
 //____________________________________________________
 Double_t HYPDCChamber::FindStub(Int_t nhits, HYPSpacePoint *sp,
-				       Int_t* plane_list, UInt_t bitpat,
-				       Int_t* plusminus, Double_t* stub)
+				Int_t* plane_list, UInt_t bitpat,
+				Int_t* plusminus, Double_t* stub)
 {
-   // For a given combination of L/R, fit a stub to the space point
+  // For a given combination of L/R, fit a stub to the space point
   // This method does a linear least squares fit of a line to the
   // hits in an individual chamber.  It assumes that the y slope is 0
   // The wire coordinate is calculated by
@@ -821,7 +821,7 @@ void HYPDCChamber::PrintDecode( void )
   for(Int_t ihit=0;ihit<fNHits;ihit++) {
     HYPDCHit* thishit = fHits[ihit];
     cout << ihit << "       " <<thishit->GetPlaneNum()  << "     " << thishit->GetWireNum() 
-    << "     " <<  thishit->GetPos() << "    " << thishit->GetRawTime() << "    " << thishit->GetTime() << endl;
+	 << "     " <<  thishit->GetPos() << "    " << thishit->GetRawTime() << "    " << thishit->GetTime() << endl;
   }
 }
 
