@@ -14,7 +14,7 @@ class THcDCTimeToDistConv;
 using namespace std;
 
 namespace DC {
-  enum Axis{ kX = 0, kU, kV, kUX, kVX};
+  enum Axis{ kX = 0, kU, kV};
 }
  
 class HYPDCPlane : public THaSubDetector {

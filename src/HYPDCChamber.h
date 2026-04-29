@@ -24,6 +24,7 @@ public:
   virtual void    AddPlane(HYPDCPlane *plane);
   virtual void    ProcessHits( void );
   virtual Int_t   FindSpacePoints( void ) ;
+  virtual Int_t   FindSpacePointsClus( void ) ;
   virtual void    PrintDecode( void ) ;
   virtual void    CorrectHitTimes( void ) ;
   virtual void    LeftRight(void);
@@ -45,11 +46,6 @@ protected:
   Int_t fNPlanes;
   Int_t fNHits;
   Int_t fChamberNum;
-
-  Int_t XPlaneInd; 		// Index of Xplane for this chamber
-  Int_t XPlanePInd; 	// Index of Xplanep for this chamber
-  Int_t XPlaneNum;		// Absolute plane number of Xplane
-  Int_t XPlanePNum;		// Absolute plane number of Xplanep
 
   Int_t fMinHits;       // Minimum hits required to find space point
   Int_t fMaxHits;       // Maximum required to find space point
@@ -104,9 +100,13 @@ protected:
   virtual Int_t  DefineVariables( EMode mode = kDefine );
 
   void       DeleteArrays();
+  Int_t      FindHardSpacePoints(void);
+  void       ChooseSingleHit(void);
+  void       SelectSpacePoints(void);
   UInt_t     Count1Bits(UInt_t x);
   Double_t   FindStub(Int_t nhits, HYPSpacePoint *sp, 
-    Int_t* plane_list, UInt_t bitpat, Int_t* plusminus, Double_t* stub);
+              Int_t* plane_list, UInt_t bitpat, 
+              Int_t* plusminus, Double_t* stub);
 
   THaDetectorBase* fParent;
 

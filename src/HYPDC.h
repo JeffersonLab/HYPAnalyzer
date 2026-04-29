@@ -105,6 +105,7 @@ class HYPDC : public THaTrackingDetector, public THcHitList {
   Double_t fYtTrCriterion;
   Double_t fXptTrCriterion;
   Double_t fYptTrCriterion;
+  Int_t fSpacePointMode;
   Int_t fUseNewLinkStubs;
   Int_t fUseNewTrackFit; 
   Int_t fVersion;

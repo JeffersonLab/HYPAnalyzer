@@ -100,19 +100,6 @@ void HYPDCChamber::AddPlane(HYPDCPlane *plane)
   plane->SetPlaneIndex(fNPlanes);
   fPlanes.push_back(plane);
 
-  // Hard code X plane numbers.  
-  // FIXME: instead check axis (kU, kX, kV)
-  if(fChamberNum == 1) {
-    XPlaneNum=3;
-    XPlanePNum=4;
-    if(plane->GetPlaneNum() == 3) XPlaneInd = fNPlanes;
-    if(plane->GetPlaneNum() == 4) XPlanePInd = fNPlanes;
-  } else {
-    XPlaneNum=9;
-    XPlanePNum=10;
-    if(plane->GetPlaneNum() == 9) XPlaneInd = fNPlanes;
-    if(plane->GetPlaneNum() == 10) XPlanePInd = fNPlanes;
-  }
   fNPlanes++;
   return;
 }
@@ -274,9 +261,10 @@ Int_t HYPDCChamber::DefineVariables( EMode mode )
 }
 
 //____________________________________________________
-Int_t HYPDCChamber::FindSpacePoints()
+Int_t HYPDCChamber::FindSpacePointsClus()
 {
 
+  // Adopt THcDCChamber::FindNewSpacePoint method 
   // 1. Form U, X, V plane clusters
   // 2. Form UX, VX cluster pairs 
   // 3. Loop over UX and VX cluster pair combinations to find space points. 
@@ -489,6 +477,280 @@ Int_t HYPDCChamber::FindSpacePoints()
 
   return fNSpacePoints;
 
+}
+
+//____________________________________________________
+Int_t HYPDCChamber::FindSpacePoints()
+{
+
+  // hcana uses FindEasySpacePoint method first to form space points 
+  // when there is a matching hit pair in x plane.
+  // Here, we will go straight to the hard method (loop over all combinations)
+  fNSpacePoints = 0;
+  if(fNHits >= fMinHits && fNHits < fMaxHits) {
+    FindHardSpacePoints();
+
+    if(fNSpacePoints > 0) {
+      ChooseSingleHit();
+      SelectSpacePoints();
+    }
+  }
+
+  for (Int_t isp = 0; isp < fNSpacePoints; isp++) {
+    HYPSpacePoint* sp = (HYPSpacePoint*)fSpacePoints->ConstructedAt(isp);
+    fSpHit.SpNHits.push_back(sp->GetNHits());
+    // Loop through all hits again and add the hit to associated space point
+    // This whole thing could be merged into FindHardSpacePoint? 
+    for(Int_t ihit1=0;ihit1<fNHits;ihit1++) {
+      HYPDCHit* hit1=fHits[ihit1];
+      for(Int_t isph=0;isph<sp->GetNHits();isph++) {
+	HYPDCHit* hitsp=sp->GetHit(isph);
+	if (hitsp==hit1) fSpHit.SpHitIndex.push_back(ihit1);
+      }
+    }
+  }
+  return(fNSpacePoints);
+}
+
+//____________________________________________________
+Int_t HYPDCChamber::FindHardSpacePoints()
+{
+  // Adopt the genearl space point finding method from hcana
+
+  struct Pair {
+    HYPDCHit* hit1;
+    HYPDCHit* hit2;
+    Double_t x, y;
+  };
+
+  Pair pairs[MAX_NUMBER_PAIRS];
+  
+  Int_t ntest_points = 0;
+  for(Int_t ihit1 = 0; ihit1 < fNHits-1; ihit1++) {
+    HYPDCHit* hit1=fHits[ihit1];
+    HYPDCPlane* plane1 = hit1->GetWirePlane();
+    for(Int_t ihit2=ihit1+1;ihit2<fNHits;ihit2++) {
+      if(ntest_points < MAX_NUMBER_PAIRS) {
+	HYPDCHit* hit2=fHits[ihit2];
+	HYPDCPlane* plane2 = hit2->GetWirePlane();
+	Double_t determinate = plane1->GetXsp()*plane2->GetYsp()
+	  -plane1->GetYsp()*plane2->GetXsp();
+	if(TMath::Abs(determinate) > 0.3) { // 0.3 is sin(alpha1-alpha2)=sin(17.5)
+	  pairs[ntest_points].hit1 = hit1;
+	  pairs[ntest_points].hit2 = hit2;
+	  pairs[ntest_points].x = (hit1->GetPos()*plane2->GetYsp()
+				   - hit2->GetPos()*plane1->GetYsp())
+	    /determinate;
+	  pairs[ntest_points].y = (hit2->GetPos()*plane1->GetXsp()
+				   - hit1->GetPos()*plane2->GetXsp())
+	    /determinate;
+	  ntest_points++;
+	}
+      }
+    }
+  }
+  Int_t ncombos=0;
+  struct Combo {
+    Pair* pair1;
+    Pair* pair2;
+  };
+  Combo combos[10*MAX_NUMBER_PAIRS];
+  for(Int_t ipair1=0;ipair1<ntest_points-1;ipair1++) {
+    for(Int_t ipair2=ipair1+1;ipair2<ntest_points;ipair2++) {
+      if(ncombos < 10*MAX_NUMBER_PAIRS) {
+	Double_t dist2 = pow(pairs[ipair1].x - pairs[ipair2].x,2)
+	  + pow(pairs[ipair1].y - pairs[ipair2].y,2);
+	if(dist2 <= fSpacePointCriterion) {
+	  combos[ncombos].pair1 = &pairs[ipair1];
+	  combos[ncombos].pair2 = &pairs[ipair2];
+	  ncombos++;
+	}
+      }
+    }
+  }
+  // Loop over all valid combinations and build space points
+  for(Int_t icombo=0;icombo<ncombos;icombo++) {
+    HYPDCHit* hits[4];
+    hits[0]=combos[icombo].pair1->hit1;
+    hits[1]=combos[icombo].pair1->hit2;
+    hits[2]=combos[icombo].pair2->hit1;
+    hits[3]=combos[icombo].pair2->hit2;
+    // Get Average Space point xt, yt
+    Double_t xt = (combos[icombo].pair1->x + combos[icombo].pair2->x)/2.0;
+    Double_t yt = (combos[icombo].pair1->y + combos[icombo].pair2->y)/2.0;
+    // Loop over space points
+    
+    if(fNSpacePoints > 0) {
+      Int_t add_flag=1;
+      for(Int_t ispace=0;ispace<fNSpacePoints;ispace++) {
+	HYPSpacePoint* sp = (HYPSpacePoint*)(*fSpacePoints)[ispace];
+	if(sp->GetNHits() > 0) {
+	  Double_t sqdist_test = pow(xt - sp->GetX(),2) + pow(yt - sp->GetY(),2);
+	  // I (who is I) want to be careful if sqdist_test is bvetween 1 and
+	  // 3 fSpacePointCriterion.  Let me ignore not add a new point the
+	  if(sqdist_test < 3*fSpacePointCriterion) {
+	    add_flag = 0;	// do not add a new space point
+	  }
+	  if(sqdist_test < fSpacePointCriterion) {
+	    // This is a real match
+	    // Add the new hits to the existing space point
+	    Int_t iflag[4];
+	    iflag[0]=0;iflag[1]=0;iflag[2]=0;iflag[3]=0;
+	    // Find out which of the four hits in the combo are already
+	    // in the space point under consideration so that we don't
+	    // add duplicate hits to the space point
+	    for(Int_t isp_hit=0;isp_hit<sp->GetNHits();isp_hit++) {
+	      for(Int_t icm_hit=0;icm_hit<4;icm_hit++) { // Loop over combo hits
+		if(sp->GetHit(isp_hit)==hits[icm_hit]) {
+		  iflag[icm_hit] = 1;
+		}
+	      }
+	    }
+	    // Remove duplicated pionts in the combo so we don't add
+	    // duplicate hits to the space point
+	    for(Int_t icm1=0;icm1<3;icm1++) {
+	      for(Int_t icm2=icm1+1;icm2<4;icm2++) {
+		if(hits[icm1]==hits[icm2]) {
+		  iflag[icm2] = 1;
+		}
+	      }
+	    }
+	    // Add the unique combo hits to the space point
+	    for(Int_t icm=0;icm<4;icm++) {
+	      if(iflag[icm]==0) {
+		sp->AddHit(hits[icm]);
+	      }
+	    }
+	    sp->IncCombos();
+	    //            cout << " number of combos = " << sp->GetCombos() << endl;
+	    // Terminate loop since this combo can only belong to one space point
+	    break;
+	  }
+	}
+      }// End of loop over existing space points
+      // Create a new space point if more than 2*space_point_criteria
+      if(fNSpacePoints < MAX_SPACE_POINTS) {
+	if(add_flag) {
+	  HYPSpacePoint* sp = (HYPSpacePoint*)fSpacePoints->ConstructedAt(fNSpacePoints++);
+	  sp->Clear();
+	  sp->SetXY(xt, yt);
+	  sp->SetCombos(1);
+	  sp->AddHit(hits[0]);
+	  sp->AddHit(hits[1]);
+	  if(hits[0] != hits[2] && hits[1] != hits[2]) {
+	    sp->AddHit(hits[2]);
+	  }
+	  if(hits[0] != hits[3] && hits[1] != hits[3]) {
+	    sp->AddHit(hits[3]);
+	  }
+	}
+      }
+    } else {// Create first space point
+      // This duplicates code above.  Need to see if we can restructure
+      // to avoid
+      HYPSpacePoint* sp = (HYPSpacePoint*)fSpacePoints->ConstructedAt(fNSpacePoints++);
+      sp->Clear();
+      sp->SetXY(xt, yt);
+      sp->SetCombos(1);
+      sp->AddHit(hits[0]);
+      sp->AddHit(hits[1]);
+      if(hits[0] != hits[2] && hits[1] != hits[2]) {
+	sp->AddHit(hits[2]);
+      }
+      if(hits[0] != hits[3] && hits[1] != hits[3]) {
+	sp->AddHit(hits[3]);
+      }
+    }//End check on 0 space points
+  }//End loop over combos
+
+
+  return(fNSpacePoints);
+  
+}
+
+//_____________________________________________________________________________
+void HYPDCChamber::ChooseSingleHit()
+{
+  /**
+     Look at all hits in a space point.  If two hits are in the same plane,
+     reject the one with the longer drift time.
+  */
+  for(Int_t isp=0;isp<fNSpacePoints;isp++) {
+    HYPSpacePoint* sp = (HYPSpacePoint*)(*fSpacePoints)[isp];
+    Int_t startnum = sp->GetNHits();
+    Int_t goodhit[startnum];
+    for(Int_t ihit=0;ihit<startnum;ihit++) {
+      goodhit[ihit] = 1;
+    }
+    // For each plane, mark all hits longer than the shortest drift time
+    for(Int_t ihit1=0;ihit1<startnum-1;ihit1++) {
+      HYPDCHit* hit1 = sp->GetHit(ihit1);
+      Int_t plane1=hit1->GetPlaneIndex();
+      Double_t tdrift1 = hit1->GetTime();
+      for(Int_t ihit2=ihit1+1;ihit2<startnum;ihit2++) {
+	HYPDCHit* hit2 = sp->GetHit(ihit2);
+	Int_t plane2=hit2->GetPlaneIndex();
+	Double_t tdrift2 = hit2->GetTime();
+	if(plane1 == plane2) {
+	  if(tdrift1 > tdrift2) {
+	    goodhit[ihit1] = 0;
+	  } else {
+	    goodhit[ihit2] = 0;
+	  }
+	}
+      }
+    }
+    // Gather the remaining hits
+    Int_t finalnum = 0;
+    for(Int_t ihit=0;ihit<startnum;ihit++) {
+      if(goodhit[ihit] > 0) {	// Keep this hit
+	if (ihit > finalnum) {	// Move hit
+	  sp->ReplaceHit(finalnum++, sp->GetHit(ihit));
+	} else {
+          finalnum++ ;
+        }
+      }
+    }
+    sp->SetNHits(finalnum);
+  }
+}
+
+//_____________________________________________________________________________
+void HYPDCChamber::SelectSpacePoints()
+{
+  /**
+     This routine goes through the list of space_points and space_point_hits
+     found by find_space_points and only accepts those with
+     number of hits > min_hits
+     number of combinations > min_combos
+  */
+  Int_t sp_count=0;
+  //
+  //
+  for(Int_t isp=0;isp<fNSpacePoints;isp++) {
+    // Include fEasySpacePoint because ncombos not filled in
+    HYPSpacePoint* sp = (HYPSpacePoint*)(*fSpacePoints)[isp];
+    //if(sp->GetCombos() >= fMinCombos || fEasySpacePoint) {
+    if(sp->GetCombos() >= fMinCombos) {
+      if(sp->GetNHits() >= fMinHits) {
+	if(isp > sp_count) {
+	  HYPSpacePoint* sp1 = (HYPSpacePoint*)(*fSpacePoints)[sp_count];
+	  sp1->Clear();
+	  Double_t xt,yt;
+	  xt=sp->GetX();
+	  yt=sp->GetY();
+	  sp1->SetXY(xt, yt);
+	  sp1->SetCombos(sp->GetCombos());
+	  for(Int_t ihit=0;ihit<sp->GetNHits();ihit++) {
+            HYPDCHit* hit = sp->GetHit(ihit);
+	    sp1->AddHit(hit);
+	  }
+	}
+	sp_count++;
+      }
+    }
+  }
+  fNSpacePoints = sp_count;
 }
 
 //____________________________________________________
