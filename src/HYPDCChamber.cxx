@@ -256,6 +256,7 @@ Int_t HYPDCChamber::DefineVariables( EMode mode )
   std::vector<RVarDef> ve;
   ve.push_back( { "sphit", "", "fSpHit.SpNHits" });
   ve.push_back(  { "sphit_index", "", "fSpHit.SpHitIndex" });
+  ve.push_back(  { "sphit_plane", "", "fSpHit.SpPlaneNum" });
   ve.push_back({0}); // Needed to specify the end of list
   return DefineVarsFromList( ve.data(), mode );
 }
@@ -505,8 +506,12 @@ Int_t HYPDCChamber::FindSpacePoints()
       HYPDCHit* hit1=fHits[ihit1];
       for(Int_t isph=0;isph<sp->GetNHits();isph++) {
 	HYPDCHit* hitsp=sp->GetHit(isph);
-	if (hitsp==hit1) fSpHit.SpHitIndex.push_back(ihit1);
-      }
+  Int_t planenum = hitsp->GetPlaneNum();
+	if (hitsp==hit1) {
+    fSpHit.SpHitIndex.push_back(ihit1);
+    fSpHit.SpPlaneNum.push_back(planenum);
+  }  
+  }
     }
   }
   return(fNSpacePoints);
@@ -933,7 +938,10 @@ void HYPDCChamber::LeftRight()
 	  iswhit <<= 1;
 	}
       }
-      if ( nplaneshit >= fNPlanes-2 ) {
+
+//      if ( nplaneshit >= fNPlanes-1 ) {
+      if ( nplaneshit >= fNPlanes-2) {
+        
       	Double_t chi2;
 	chi2 = FindStub(nhits, sp,plane_list, bitpat, plusminus, stub);
 	if (fdebugstubchisq) cout << " pmloop = " << pmloop << " chi2 = " << chi2 << endl;
@@ -1079,11 +1087,11 @@ Double_t HYPDCChamber::FindStub(Int_t nhits, HYPSpacePoint *sp,
 void HYPDCChamber::PrintDecode( void )
 {
   cout << " Num of nits = " << fNHits << endl;
-  cout << " Num " << " Plane "  << " Wire " <<  "  Wire-Center  " << " RAW TDC " << " Drift time" << endl;
+  cout << " Num " << " Plane "  << " Wire " <<  "  Wire-Center  " << " RAW TDC " << " Drift time" << " Drift distance" << endl;
   for(Int_t ihit=0;ihit<fNHits;ihit++) {
     HYPDCHit* thishit = fHits[ihit];
     cout << ihit << "       " <<thishit->GetPlaneNum()  << "     " << thishit->GetWireNum() 
-	 << "     " <<  thishit->GetPos() << "    " << thishit->GetRawTime() << "    " << thishit->GetTime() << endl;
+	 << "     " <<  thishit->GetPos() << "    " << thishit->GetRawTime() << "    " << thishit->GetTime() << "     " << thishit->GetDist() << endl;
   }
 }
 

@@ -81,9 +81,11 @@ protected:
   struct SpacePointOutputData {
     std::vector<Int_t> SpNHits;            //< [] Number of Hits in space point
     std::vector<Int_t> SpHitIndex;         //< []*SpNHits  Hit index for each hit in sp point
+    std::vector<Int_t> SpPlaneNum;
     void clear() {
       SpNHits.clear();
       SpHitIndex.clear();
+      SpPlaneNum.clear();
     }
   };
 
