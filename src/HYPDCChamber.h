@@ -47,6 +47,7 @@ protected:
   Int_t fNHits;
   Int_t fChamberNum;
 
+  Int_t fMinPlanes;     // Minimum planes with hits to find stubs
   Int_t fMinHits;       // Minimum hits required to find space point
   Int_t fMaxHits;       // Maximum required to find space point
   Int_t fMinCombos;     // Minimum # pairs in a space point

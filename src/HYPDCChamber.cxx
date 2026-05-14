@@ -162,6 +162,7 @@ Int_t HYPDCChamber::ReadDatabase( const TDatime& date )
   
   // Get parameters parent knows about
   fParent = GetParent();
+  fMinPlanes = static_cast<HYPDC*>(fParent)->GetMinPlanes(fChamberNum);
   fMinHits = static_cast<HYPDC*>(fParent)->GetMinHits(fChamberNum);
   fMaxHits = static_cast<HYPDC*>(fParent)->GetMaxHits(fChamberNum);
   fMinCombos = static_cast<HYPDC*>(fParent)->GetMinCombos(fChamberNum);
@@ -940,7 +941,7 @@ void HYPDCChamber::LeftRight()
       }
 
 //      if ( nplaneshit >= fNPlanes-1 ) {
-      if ( nplaneshit >= fNPlanes-2) {
+      if ( nplaneshit >= fMinPlanes){
         
       	Double_t chi2;
 	chi2 = FindStub(nhits, sp,plane_list, bitpat, plusminus, stub);

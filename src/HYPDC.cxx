@@ -33,6 +33,7 @@ HYPDC::HYPDC(const char* name, const char* description,
   fNPlanes = 0;
   fXCenter = nullptr;
   fYCenter = nullptr;
+  fMinPlanes = nullptr;
   fMinHits = nullptr;
   fMaxHits = nullptr;
   fMinCombos = nullptr;
@@ -95,6 +96,7 @@ void HYPDC::DeleteArrays()
 
   delete [] fXCenter;   fXCenter = nullptr;
   delete [] fYCenter;   fYCenter = nullptr;
+  delete [] fMinPlanes; fMinPlanes = nullptr;
   delete [] fMinHits;   fMinHits = nullptr;
   delete [] fMaxHits;   fMaxHits = nullptr;
   delete [] fMinCombos;   fMinCombos = nullptr;
@@ -334,6 +336,7 @@ Int_t HYPDC::ReadDatabase( const TDatime& date )
 
   delete [] fXCenter;  fXCenter = new Double_t [fNChambers];
   delete [] fYCenter;  fYCenter = new Double_t [fNChambers];
+  delete [] fMinPlanes; fMinPlanes = new Int_t [fNChambers];
   delete [] fMinHits;  fMinHits = new Int_t [fNChambers];
   delete [] fMaxHits;  fMaxHits = new Int_t [fNChambers];
   delete [] fMinCombos;  fMinCombos = new Int_t [fNChambers];
@@ -368,6 +371,7 @@ Int_t HYPDC::ReadDatabase( const TDatime& date )
 
     {"dc_xcenter", fXCenter, kDouble, fNChambers},
     {"dc_ycenter", fYCenter, kDouble, fNChambers},
+    {"min_planes", fMinPlanes, kInt, fNChambers},
     {"min_hit", fMinHits, kInt, fNChambers},
     {"max_pr_hits", fMaxHits, kInt, fNChambers},
     {"min_combos", fMinCombos, kInt, fNChambers},
