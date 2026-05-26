@@ -152,6 +152,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
     {"_UseSampWaveform",   &fUseSampWaveform, kInt,0,1},
     {"_adcrefcut",         &fADC_RefTimeCut,  kInt,0,1},
     {"_debug_adc",         &fDebugAdc,        kInt,0,1},
+    {"_adc_tdc_offset",    &fAdcTdcOffset,    kDouble, 0, 1},
     {"_adcPosTimeWindowMin", fAdcPosTimeWindowMin, kDouble, static_cast<UInt_t>(fNelem), 1},
     {"_adcPosTimeWindowMax", fAdcPosTimeWindowMax, kDouble, static_cast<UInt_t>(fNelem), 1},
     {"_adcNegTimeWindowMin", fAdcNegTimeWindowMin, kDouble, static_cast<UInt_t>(fNelem), 1},
@@ -163,6 +164,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
 
   // Default values
   fADC_RefTimeCut = 0;
+  fAdcTdcOffset = 0;
   fSampThreshold = 5.;
   fSampNSA = 0;   // use value stored in event 125 info
   fSampNSB = 0;   // use value stored in event 125 info
@@ -275,7 +277,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 	posdata.Ped = rawPosAdcHit.GetPed();
 	posdata.PulseInt = rawPosAdcHit.GetPulseInt(thit);
 	posdata.PulseAmp = rawPosAdcHit.GetPulseAmp(thit);
-	posdata.PulseTime = rawPosAdcHit.GetPulseTime(thit);
+	posdata.PulseTime = rawPosAdcHit.GetPulseTime(thit) + fAdcTdcOffset; 
 
 	if(posdata_raw.PulseAmp > 0)  errorflag = 0;
 	if(posdata_raw.PulseAmp <= 0) errorflag = 1;
@@ -313,7 +315,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
         possampdata.Ped = rawPosAdcHit.GetSampPed();
         possampdata.PulseInt = rawPosAdcHit.GetSampPulseInt(thit);
         possampdata.PulseAmp = rawPosAdcHit.GetSampPulseAmp(thit);
-        possampdata.PulseTime = rawPosAdcHit.GetSampPulseTime(thit);
+        possampdata.PulseTime = rawPosAdcHit.GetSampPulseTime(thit) + fAdcTdcOffset;
 
         fPosSampDataRaw.emplace_back(possampdata_raw);
         fPosSampData.emplace_back(possampdata);
@@ -348,7 +350,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
       negdata.Ped = rawNegAdcHit.GetPed();
       negdata.PulseInt = rawNegAdcHit.GetPulseInt(thit);
       negdata.PulseAmp = rawNegAdcHit.GetPulseAmp(thit);
-      negdata.PulseTime = rawNegAdcHit.GetPulseTime(thit);
+      negdata.PulseTime = rawNegAdcHit.GetPulseTime(thit) + fAdcTdcOffset;
 
       if(negdata_raw.PulseAmp> 0) errorflag = 0;
       if(negdata_raw.PulseAmp <= 0) errorflag = 1;
@@ -382,7 +384,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
         negsampdata.Ped = rawNegAdcHit.GetSampPed();
         negsampdata.PulseInt = rawNegAdcHit.GetSampPulseInt(thit);
         negsampdata.PulseAmp = rawNegAdcHit.GetSampPulseAmp(thit);
-        negsampdata.PulseTime = rawNegAdcHit.GetSampPulseTime(thit);
+        negsampdata.PulseTime = rawNegAdcHit.GetSampPulseTime(thit) + fAdcTdcOffset;
 
         fNegSampDataRaw.emplace_back(negsampdata_raw);
         fNegSampData.emplace_back(negsampdata);
