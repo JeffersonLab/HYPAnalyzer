@@ -94,6 +94,9 @@ void HYPCherenkov::Clear( Option_t* opt )
   fPosDataGood.clear();
   fNegDataGood.clear();
 
+  std::fill(fPosNpe.begin(), fPosNpe.end(), 0);
+  std::fill(fNegNpe.begin(), fNegNpe.end(), 0);
+
   fPosNpeSum = 0.;
   fNegNpeSum = 0.;
   fNpeSum = 0.;
@@ -183,6 +186,9 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
   fPosSampData.reserve(fNelem);
   fNegSampData.reserve(fNelem);
 
+  fPosNpe.assign(fNelem, 0.0);
+  fNegNpe.assign(fNelem, 0.0);
+
   fIsInit = true;
 
   return kOK;
@@ -226,6 +232,8 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
   }
 
   RVarDef vars[] = {
+    {"posNpe",      "Number of Positive PEs", "fPosNpe"},
+    {"negNpe",      "Number of Negative PEs", "fNegNpe"},
     {"posNpeSum",   "Total Number of Positive PEs", "fPosNpeSum"},
     {"negNpeSum",   "Total Number of Negative PEs", "fNegNpeSum"},
     {"npeSum",      "Total Number of PEs",          "fNpeSum"},
@@ -423,6 +431,7 @@ Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
     if(pass_timecut) {
       // Calculate NPE
       Double_t npe = fPosGain[ipmt] * adchit.PulseInt; // use pulse int or pulse amp?
+      fPosNpe.at(ipmt) = npe;
       fPosNpeSum += npe;
 
       adchit.Is_good_hit = 1; // set good hit flag to true
@@ -439,6 +448,7 @@ Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
     if(pass_timecut) {
       // Calculate NPE
       Double_t npe = fNegGain[ipmt] * adchit.PulseInt; // use pulse int or pulse amp?
+      fNegNpe.at(ipmt) = npe;
       fNegNpeSum += npe;
 
       adchit.Is_good_hit = 1; // set good hit flag to true

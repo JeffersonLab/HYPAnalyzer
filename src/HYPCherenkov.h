@@ -78,6 +78,9 @@ class HYPCherenkov : public THaNonTrackingDetector, THcHitList {
   vector<FADCHitData> fPosSampData;
   vector<FADCHitData> fNegSampData;
 
+  vector<Double_t> fPosNpe;
+  vector<Double_t> fNegNpe;
+
   vector<Int_t> fPosErrorFlag;
   vector<Int_t> fNegErrorFlag;
 
