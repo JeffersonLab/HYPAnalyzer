@@ -96,6 +96,10 @@ void HYPCherenkov::Clear( Option_t* opt )
 
   std::fill(fPosNpe.begin(), fPosNpe.end(), 0);
   std::fill(fNegNpe.begin(), fNegNpe.end(), 0);
+  std::fill(fGoodPosAdcPed.begin(), fGoodPosAdcPed.end(), 0);
+  std::fill(fGoodNegAdcPed.begin(), fGoodNegAdcPed.end(), 0);
+  std::fill(fNumGoodPosAdcHits.begin(), fNumGoodPosAdcHits.end(), 0);
+  std::fill(fNumGoodNegAdcHits.begin(), fNumGoodNegAdcHits.end(), 0);
 
   fPosNpeSum = 0.;
   fNegNpeSum = 0.;
@@ -159,7 +163,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
     {"_adcPosTimeWindowMin", fAdcPosTimeWindowMin, kDouble, static_cast<UInt_t>(fNelem), 1},
     {"_adcPosTimeWindowMax", fAdcPosTimeWindowMax, kDouble, static_cast<UInt_t>(fNelem), 1},
     {"_adcNegTimeWindowMin", fAdcNegTimeWindowMin, kDouble, static_cast<UInt_t>(fNelem), 1},
-    {"_adcNegTimeWindowMin", fAdcNegTimeWindowMax, kDouble, static_cast<UInt_t>(fNelem), 1},
+    {"_adcNegTimeWindowMax", fAdcNegTimeWindowMax, kDouble, static_cast<UInt_t>(fNelem), 1},
     {"_pos_gain",            fPosGain, kDouble, static_cast<UInt_t>(fNelem), 1},
     {"_neg_gain",            fNegGain, kDouble, static_cast<UInt_t>(fNelem), 1},
     {nullptr}
@@ -188,6 +192,10 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
 
   fPosNpe.assign(fNelem, 0.0);
   fNegNpe.assign(fNelem, 0.0);
+  fGoodPosAdcPed.assign(fNelem, 0.0);     // single ped per pmt
+  fGoodNegAdcPed.assign(fNelem, 0.0);
+  fNumGoodPosAdcHits.assign(fNelem, 0.0); // occupancy
+  fNumGoodNegAdcHits.assign(fNelem, 0.0);
 
   fIsInit = true;
 
@@ -206,7 +214,7 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
       // {"numNegAdcHits",        "Number of Negative ADC Hits Per PMT",      "fNumNegAdcHits"},        // Aerogel occupancy
       // {"totNumNegAdcHits",     "Total Number of Negative ADC Hits",        "fTotNumNegAdcHits"},     // Aerogel multiplicity
       // {"totnumAdcHits",       "Total Number of ADC Hits Per PMT",          "fTotNumAdcHits"},        // Aerogel multiplicity
-      {"posPadNum",          "Paddle number",                     "fPosDataRaw.paddle"},
+      {"posPadNumRaw",       "Paddle number",                     "fPosDataRaw.paddle"},
       {"posAdcPedRaw",       "Positive Raw ADC pedestals",        "fPosDataRaw.Ped"},
       {"posAdcPulseIntRaw",  "Positive Raw ADC pulse integrals",  "fPosDataRaw.PulseInt"},
       {"posAdcPulseAmpRaw",  "Positive Raw ADC pulse amplitudes", "fPosDataRaw.PulseAmp"},
@@ -215,7 +223,7 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
       {"posAdcPulseInt",     "Positive ADC pulse integrals",      "fPosData.PulseInt"},
       {"posAdcPulseAmp",     "Positive ADC pulse amplitudes",     "fPosData.PulseAmp"},
       {"posAdcPulseTime",    "Positive ADC pulse times",          "fPosData.PulseTime"},
-      {"negPadNum",          "Paddle number",                     "fNegDataRaw.paddle"},
+      {"negPadNumRaw",       "Paddle number",                     "fNegDataRaw.paddle"},
       {"negAdcPedRaw",       "Negative Raw ADC pedestals",        "fNegDataRaw.Ped"},
       {"negAdcPulseIntRaw",  "Negative Raw ADC pulse integrals",  "fNegDataRaw.PulseInt"},
       {"negAdcPulseAmpRaw",  "Negative Raw ADC pulse amplitudes", "fNegDataRaw.PulseAmp"},
@@ -232,19 +240,24 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
   }
 
   RVarDef vars[] = {
+    {"posPadNum",   "Paddle number for Pos ADC",   "fPosDataGood.paddle"},
+    {"negPadNum",   "Paddle number for Neg ADC",   "fNegDataGood.paddle"},
+
     {"posNpe",      "Number of Positive PEs", "fPosNpe"},
     {"negNpe",      "Number of Negative PEs", "fNegNpe"},
     {"posNpeSum",   "Total Number of Positive PEs", "fPosNpeSum"},
     {"negNpeSum",   "Total Number of Negative PEs", "fNegNpeSum"},
     {"npeSum",      "Total Number of PEs",          "fNpeSum"},
-    {"goodPosAdcPed",          "Good Positive ADC pedestals",            "fPosDataGood.Ped"},
+    {"goodPosAdcPed",          "Good Positive ADC pedestals",            "fGoodPosAdcPed"},
     {"goodPosAdcPulseInt",     "Good Positive ADC pulse integrals",      "fPosDataGood.PulseInt"},
     {"goodPosAdcPulseAmp",     "Good Positive ADC pulse amplitudes",     "fPosDataGood.PulseAmp"},
     {"goodPosAdcPulseTime",    "Good Positive ADC pulse times",          "fPosDataGood.PulseTime"},
-    {"goodNegAdcPed",          "Good Negative ADC pedestals",            "fNegDataGood.Ped"},
+    {"goodNegAdcPed",          "Good Negative ADC pedestals",            "fGoodNegAdcPed"},
     {"goodNegAdcPulseInt",     "Good Negative ADC pulse integrals",      "fNegDataGood.PulseInt"},
     {"goodNegAdcPulseAmp",     "Good Negative ADC pulse amplitudes",     "fNegDataGood.PulseAmp"},
     {"goodNegAdcPulseTime",    "Good Negative ADC pulse times",          "fNegDataGood.PulseTime"},
+    {"numGoodPosAdcHits",      "Number of Good Pos ADC Hits per PMT",    "fNumGoodPosAdcHits"}, //occupancy
+    {"numGoodNegAdcHits",      "Number of Good Neg ADC Hits per PMT",    "fNumGoodNegAdcHits"}, // occupancy
     {nullptr}
   };
 
@@ -424,7 +437,7 @@ Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
 
   // Loop over pos adc hits
   for(auto adchit : fPosData) {
-    Int_t ipmt = adchit.paddle;
+    Int_t ipmt = adchit.paddle -1;
     Double_t timediff = start_time - adchit.PulseTime;
 
     Bool_t pass_timecut = (timediff > fAdcPosTimeWindowMin[ipmt] && timediff < fAdcPosTimeWindowMax[ipmt]);
@@ -434,6 +447,9 @@ Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
       fPosNpe.at(ipmt) = npe;
       fPosNpeSum += npe;
 
+      fGoodPosAdcPed.at(ipmt) = adchit.Ped;
+      fNumGoodPosAdcHits.at(ipmt) += 1; // occupancy per pmt
+
       adchit.Is_good_hit = 1; // set good hit flag to true
       fPosDataGood.emplace_back(adchit); // add to the good hit list
     }
@@ -441,7 +457,7 @@ Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
 
   // Loop over neg adc hits
   for(auto adchit : fNegData) {
-    Int_t ipmt = adchit.paddle;
+    Int_t ipmt = adchit.paddle -1;
     Double_t timediff = start_time - adchit.PulseTime;
 
     Bool_t pass_timecut = (timediff > fAdcNegTimeWindowMin[ipmt] && timediff < fAdcNegTimeWindowMax[ipmt]);
@@ -450,6 +466,9 @@ Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
       Double_t npe = fNegGain[ipmt] * adchit.PulseInt; // use pulse int or pulse amp?
       fNegNpe.at(ipmt) = npe;
       fNegNpeSum += npe;
+
+      fGoodNegAdcPed.at(ipmt) = adchit.Ped;
+      fNumGoodNegAdcHits.at(ipmt) += 1;
 
       adchit.Is_good_hit = 1; // set good hit flag to true
       fNegDataGood.emplace_back(adchit); // add to the good hit list
