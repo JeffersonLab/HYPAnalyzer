@@ -104,6 +104,9 @@ void HYPCherenkov::Clear( Option_t* opt )
   fPosNpeSum = 0.;
   fNegNpeSum = 0.;
   fNpeSum = 0.;
+
+  fPosSampWaveform.clear();
+  fNegSampWaveform.clear();
 }
 
 //_____________________________________________________________________
@@ -157,6 +160,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
     {"_SampNSAT",          &fSampNSAT,        kInt,0,1},
     {"_SampNSB",           &fSampNSB,         kInt,0,1},
     {"_UseSampWaveform",   &fUseSampWaveform, kInt,0,1},
+    {"_OutSampWaveform",   &fOutSampWaveform, kInt,0,1},
     {"_adcrefcut",         &fADC_RefTimeCut,  kInt,0,1},
     {"_debug_adc",         &fDebugAdc,        kInt,0,1},
     {"_adc_tdc_offset",    &fAdcTdcOffset,    kDouble, 0, 1},
@@ -177,6 +181,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
   fSampNSB = 0;   // use value stored in event 125 info
   fSampNSAT = 2;  // default value in THcRawHit::SetF250Params
   fUseSampWaveform = 0; // 0= do not use , 1 = use Sample Waveform
+  fOutSampWaveform = 0;
   fDebugAdc = 0;  // Save raw adc variables, default = 0
 
   gHcParms->LoadParmValues((DBRequest*)&list, prefix.c_str());
@@ -237,6 +242,15 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
       { nullptr }
     };
     DefineVarsFromList( vars, mode);
+  }
+
+  if(fOutSampWaveform == 1) {
+    RVarDef vars[] = {
+      {"posSampWaveform",   "FADC Sample Waveform for Pos ADC",  "fPosSampWaveform"},
+      {"negSampWaveform",   "FADC Sample Waveform for Neg ADC",  "fNegSampWaveform"},
+      {nullptr}
+    };
+    DefineVarsFromList( vars, mode);    
   }
 
   RVarDef vars[] = {
@@ -320,7 +334,15 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
       if (fSampNSAT != 2) rawPosAdcHit.SetSampNSAT(fSampNSAT);
       rawPosAdcHit.SetSampIntTimePedestalPeak();
       
-      // FIXME: Do we want to save waveform data?
+      // Save waveform data
+      if(fOutSampWaveform == 1) {
+	fPosSampWaveform.push_back(float(npmt));
+	fPosSampWaveform.push_back(float(rawPosAdcHit.GetNSamples()));
+	
+	for(UInt_t thit = 0; thit < rawPosAdcHit.GetNSamples(); thit++)
+	  fPosSampWaveform.push_back(rawPosAdcHit.GetSampleRaw(thit));
+      }	
+
       for (UInt_t thit = 0; thit < rawPosAdcHit.GetNSampPulses(); thit++) {
 
         FADCHitData possampdata_raw;
@@ -390,6 +412,15 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
       if (fSampNSAT != 2) rawNegAdcHit.SetSampNSAT(fSampNSAT);
       rawNegAdcHit.SetSampIntTimePedestalPeak();
       
+      // Save waveform data
+      if(fOutSampWaveform == 1) {
+	fNegSampWaveform.push_back(float(npmt));
+	fNegSampWaveform.push_back(float(rawNegAdcHit.GetNSamples()));
+	
+	for(UInt_t thit = 0; thit < rawNegAdcHit.GetNSamples(); thit++)
+	  fNegSampWaveform.push_back(rawNegAdcHit.GetSampleRaw(thit));
+      }	
+
       for (UInt_t thit = 0; thit < rawNegAdcHit.GetNSampPulses(); thit++) {
 
         FADCHitData negsampdata_raw;
