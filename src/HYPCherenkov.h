@@ -39,6 +39,7 @@ class HYPCherenkov : public THaNonTrackingDetector, THcHitList {
   Int_t     fSampNSA;
   Int_t     fSampNSAT;
   Int_t     fSampNSB;
+  Int_t     fSampNPED;
   Int_t     fDebugAdc;
 
   Double_t  *fAdcPosTimeWindowMin;

@@ -159,6 +159,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
     {"_SampNSA",           &fSampNSA,         kInt,0,1},
     {"_SampNSAT",          &fSampNSAT,        kInt,0,1},
     {"_SampNSB",           &fSampNSB,         kInt,0,1},
+    {"_SampNPED",          &fSampNPED,        kInt,0,1},
     {"_UseSampWaveform",   &fUseSampWaveform, kInt,0,1},
     {"_OutSampWaveform",   &fOutSampWaveform, kInt,0,1},
     {"_adcrefcut",         &fADC_RefTimeCut,  kInt,0,1},
@@ -180,6 +181,7 @@ Int_t HYPCherenkov::ReadDatabase( const TDatime& date )
   fSampNSA = 0;   // use value stored in event 125 info
   fSampNSB = 0;   // use value stored in event 125 info
   fSampNSAT = 2;  // default value in THcRawHit::SetF250Params
+  fSampNPED = 4;  // number of pedestal samples
   fUseSampWaveform = 0; // 0= do not use , 1 = use Sample Waveform
   fOutSampWaveform = 0;
   fDebugAdc = 0;  // Save raw adc variables, default = 0
@@ -214,11 +216,11 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
   if (fDebugAdc) {
     RVarDef vars[] = {
       // FIXME; put the counters back?
-      // {"numPosAdcHits",        "Number of Positive ADC Hits Per PMT",      "fNumPosAdcHits"},        // Aerogel occupancy
-      // {"totNumPosAdcHits",     "Total Number of Positive ADC Hits",        "fTotNumPosAdcHits"},     // Aerogel multiplicity
-      // {"numNegAdcHits",        "Number of Negative ADC Hits Per PMT",      "fNumNegAdcHits"},        // Aerogel occupancy
-      // {"totNumNegAdcHits",     "Total Number of Negative ADC Hits",        "fTotNumNegAdcHits"},     // Aerogel multiplicity
-      // {"totnumAdcHits",       "Total Number of ADC Hits Per PMT",          "fTotNumAdcHits"},        // Aerogel multiplicity
+      // {"numPosAdcHits",        "Number of Positive ADC Hits Per PMT",      "fNumPosAdcHits"},        // pos pmt occupancy
+      // {"totNumPosAdcHits",     "Total Number of Positive ADC Hits",        "fTotNumPosAdcHits"},     // pos multiplicity
+      // {"numNegAdcHits",        "Number of Negative ADC Hits Per PMT",      "fNumNegAdcHits"},        // neg pmt occupancy
+      // {"totNumNegAdcHits",     "Total Number of Negative ADC Hits",        "fTotNumNegAdcHits"},     // neg multiplicity
+      // {"totnumAdcHits",       "Total Number of ADC Hits Per PMT",          "fTotNumAdcHits"},        // tot multiplicity
       {"posPadNumRaw",       "Paddle number",                     "fPosDataRaw.paddle"},
       {"posAdcPedRaw",       "Positive Raw ADC pedestals",        "fPosDataRaw.Ped"},
       {"posAdcPulseIntRaw",  "Positive Raw ADC pulse integrals",  "fPosDataRaw.PulseInt"},
@@ -239,6 +241,15 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
       {"negAdcPulseTime",    "Negative ADC pulse times",          "fNegData.PulseTime"},
       {"posErrorFlag",       "Error Flag for When FPGA Fails",    "fPosErrorFlag"},
       {"negErrorFlag",       "Error Flag for When FPGA Fails",    "fNegErrorFlag"},
+      // Add sample data output for check
+      {"posAdcSampPulseIntRaw", "Postive Raw Samp Adc pulse Integral", "fPosSampDataRaw.PulseInt"},
+      {"posAdcSampPedRaw",      "Postive Raw Samp Adc pedestal",       "fPosSampDataRaw.Ped"},
+      {"posAdcSampPulseAmpRaw", "Postive Raw Samp Adc amp",            "fPosSampDataRaw.PulseAmp"},
+      {"posAdcSampPulseTimeRaw","Postive Raw Samp Adc time",           "fPosSampDataRaw.PulseTime"},
+      {"posAdcSampPulseInt",    "Postive Samp Adc pulse Integral",     "fPosSampData.PulseInt"},
+      {"posAdcSampPed",         "Postive Samp Adc pedestal",           "fPosSampData.Ped"},
+      {"posAdcSampPulseAmp",    "Postive Samp Adc pulse amp",          "fPosSampData.PulseAmp"},
+      {"posAdcSampPulseTime",   "Postive Samp Adc pulse time",         "fPosSampData.PulseTime"},
       { nullptr }
     };
     DefineVarsFromList( vars, mode);
@@ -256,7 +267,6 @@ Int_t HYPCherenkov::DefineVariables( EMode mode )
   RVarDef vars[] = {
     {"posPadNum",   "Paddle number for Pos ADC",   "fPosDataGood.paddle"},
     {"negPadNum",   "Paddle number for Neg ADC",   "fNegDataGood.paddle"},
-
     {"posNpe",      "Number of Positive PEs", "fPosNpe"},
     {"negNpe",      "Number of Negative PEs", "fNegNpe"},
     {"posNpeSum",   "Total Number of Positive PEs", "fPosNpeSum"},
@@ -287,7 +297,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
   }
 
   fNhits = DecodeToHitList(evdata, !present);
-
+  
   // FIXME: Define a function to store data and call it for pos/neg
   Int_t ihit = 0;
   while(ihit < fNhits) {
@@ -330,7 +340,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
       rawPosAdcHit.SetSampThreshold(fSampThreshold);
       if (fSampNSA == 0) fSampNSA=rawPosAdcHit.GetF250_NSA();
       if (fSampNSB == 0) fSampNSB=rawPosAdcHit.GetF250_NSB();
-      rawPosAdcHit.SetF250Params(fSampNSA,fSampNSB,4); // Set NPED =4
+      rawPosAdcHit.SetF250Params(fSampNSA,fSampNSB,fSampNPED); // Set NPED =4
       if (fSampNSAT != 2) rawPosAdcHit.SetSampNSAT(fSampNSAT);
       rawPosAdcHit.SetSampIntTimePedestalPeak();
       
@@ -364,7 +374,6 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
         fPosSampData.emplace_back(possampdata);
 
         if ( rawPosAdcHit.GetNPulses() ==0 || fUseSampWaveform ==1 ) {
-
           errorflag = 3;
           if(fUseSampWaveform) errorflag = 0;
 
@@ -408,7 +417,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
       rawNegAdcHit.SetSampThreshold(fSampThreshold);
       if (fSampNSA == 0) fSampNSA=rawNegAdcHit.GetF250_NSA();
       if (fSampNSB == 0) fSampNSB=rawNegAdcHit.GetF250_NSB();
-      rawNegAdcHit.SetF250Params(fSampNSA,fSampNSB,4); // Set NPED =4
+      rawNegAdcHit.SetF250Params(fSampNSA,fSampNSB,fSampNPED); // Set NPED =4
       if (fSampNSAT != 2) rawNegAdcHit.SetSampNSAT(fSampNSAT);
       rawNegAdcHit.SetSampIntTimePedestalPeak();
       
@@ -463,7 +472,7 @@ Int_t HYPCherenkov::Decode( const THaEvData& evdata )
 Int_t HYPCherenkov::CoarseProcess( TClonesArray& tracks )
 {
   
-  // FIXME: Add start time correction?
+  // FIXME: Add start time correction
   Double_t start_time = 0.0;
 
   // Loop over pos adc hits
