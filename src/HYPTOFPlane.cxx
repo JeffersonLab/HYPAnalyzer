@@ -355,7 +355,6 @@ Int_t HYPTOFPlane::ProcessHits(TClonesArray *rawhits, int nexthit)
         Double_t time_raw = DecodeTDCData(rawTdcHit.GetTimeRaw(thit));
         //Double_t this_tdc = rawTdcHit.GetTime(thit) + fTdcOffset;
         Double_t this_tdc = (time_raw - fTdcRefTime[signal]) + fTdcOffset;
-        //cout << "Plane, PMT, TDC: " << fPlaneNum << " " << padnum << " " << rawTdcHit.GetTimeRaw(thit) << endl;
         if( this_tdc >= fScinTdcMin && this_tdc <= fScinTdcMax ) {
           good_tdc_hit_flag = 1;
           // Save first good tdc hit information
@@ -363,7 +362,7 @@ Int_t HYPTOFPlane::ProcessHits(TClonesArray *rawhits, int nexthit)
             found_good_tdc[signal] = kTRUE;
             good_tdc[signal] = this_tdc;
           }
-        }
+	}
         TDCData t_data;
         t_data.paddle = padnum;
         t_data.TimeRaw = time_raw;
@@ -391,7 +390,7 @@ Int_t HYPTOFPlane::ProcessHits(TClonesArray *rawhits, int nexthit)
 
       Int_t errorflag = -1;
       for(UInt_t thit = 0; thit < rawAdcHit.GetNPulses(); thit++) {
-        //cout << "Plane, PMT, ADC: " << fPlaneNum << " " << padnum << " " << rawAdcHit.GetPulseAmpRaw(thit) << endl;
+
         FADCHitData fdata_raw;
         FADCHitData fdata;
 
